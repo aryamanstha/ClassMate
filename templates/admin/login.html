@@ -1,0 +1,11 @@
+{% extends "admin/login.html" %}
+
+{% block content %}
+    {{ block.super }}
+
+    <div style="margin-top: 20px; text-align: center;">
+        <a href="{% url 'landing' %}" style="font-size: 15px; text-decoration: none;">
+            ← Return to Home
+        </a>
+    </div>
+{% endblock %}

@@ -1,0 +1,23 @@
+{% extends "base.html" %}
+{% block title %}My Sections{% endblock %}
+
+{% block content %}
+<h2 class="fw-bold mb-4">My Sections</h2>
+
+<div class="row g-4">
+    {% for sec in sections %}
+    <div class="col-md-4">
+        <a href="{% url 'section_detail' sec.section_id %}" class="text-decoration-none text-dark">
+            <div class="card p-3 shadow-sm h-100">
+                <i class="bi bi-layout-text-sidebar-reverse fs-1 text-success"></i>
+                <h5>{{ sec.section_id }}</h5>
+                <p class="mb-1"><strong>Course:</strong> {{ sec.course.course_name }}</p>
+                <p class="mb-1"><strong>Semester:</strong> {{ sec.semester }} {{ sec.year }}</p>
+            </div>
+        </a>
+    </div>
+    {% empty %}
+    <p class="text-muted">You are not assigned to any sections.</p>
+    {% endfor %}
+</div>
+{% endblock %}

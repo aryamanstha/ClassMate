@@ -1,0 +1,65 @@
+{% extends "base.html" %}
+{% block title %}Edit Textbooks{% endblock %}
+
+{% block content %}
+<h2 class="fw-bold mb-3">
+    Manage Textbooks — {{ section.course.course_name }} ({{ section.semester }} {{ section.year }})
+</h2>
+
+<!-- Assigned Textbooks -->
+<h4 class="fw-bold">Current Textbooks</h4>
+
+{% if assigned %}
+<ul class="list-group mt-3">
+    {% for st in assigned %}
+    <li class="list-group-item d-flex justify-content-between align-items-center">
+        <span>
+            <strong>{{ st.textbook.title }}</strong><br>
+            <small class="text-muted">{{ st.requirement_type }}</small>
+        </span>
+
+        <a href="{% url 'remove_textbook' st.id %}" 
+           class="btn btn-sm btn-outline-danger">
+            Remove
+        </a>
+    </li>
+    {% endfor %}
+</ul>
+{% else %}
+<p class="text-muted">No textbooks assigned.</p>
+{% endif %}
+
+<hr>
+
+<h4 class="fw-bold">Add Textbook</h4>
+
+<form method="POST" class="card p-3 shadow-sm mt-3">
+    {% csrf_token %}
+
+    <div class="mb-3">
+        <label class="form-label">Choose Textbook</label>
+        <select class="form-select" name="textbook">
+            <option value="">-- select --</option>
+            {% for tb in textbooks %}
+            <option value="{{ tb.textbook_id }}">{{ tb.title }} ({{ tb.isbn }})</option>
+            {% endfor %}
+        </select>
+    </div>
+
+    <div class="mb-3">
+        <label class="form-label">Requirement Type</label>
+        <select class="form-select" name="requirement">
+            <option value="Required">Required</option>
+            <option value="Recommended">Recommended</option>
+        </select>
+    </div>
+
+    <button class="btn btn-primary w-100" type="submit">
+        Add Textbook
+    </button>
+</form>
+
+<a class="btn btn-secondary mt-3" href="{% url 'instructor_dashboard' %}">
+    Back to Dashboard
+</a>
+{% endblock %}

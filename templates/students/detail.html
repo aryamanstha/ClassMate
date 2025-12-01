@@ -1,0 +1,44 @@
+{% extends 'base.html' %}
+{% block title %}{{ student.name }}{% endblock %}
+
+{% block content %}
+<div class="fade-in">
+
+<h2 class="fw-bold mb-3"><i class="bi bi-person-circle icon-bounce"></i> {{ student.name }}</h2>
+
+<div class="card mb-4 card-hover">
+    <div class="card-body">
+        <p><i class="bi bi-envelope"></i> <strong>Email:</strong> {{ student.email }}</p>
+        <p><strong>ID:</strong> {{ student.student_id }}</p>
+    </div>
+</div>
+
+<h4 class="fw-bold"><i class="bi bi-layout-text-window-reverse"></i> Enrollments</h4>
+<ul class="list-group mt-3">
+    {% for e in enrollments %}
+        <li class="list-group-item list-hover">
+            <strong>{{ e.section.course.course_name }}</strong>
+            <br>
+            <small class="text-muted">{{ e.section.semester }} {{e.section.year}} — {{ e.section.instructor.name }}</small>
+        </li>
+    {% empty %}
+        <p class="text-muted">No enrollments found.</p>
+    {% endfor %}
+</ul>
+
+<h4 class="fw-bold mt-5"><i class="bi bi-book"></i> Borrowed Books</h4>
+<ul class="list-group mt-3">
+    {% for b in borrows %}
+        <li class="list-group-item list-hover">
+            <strong>{{ b.textbook.title }}</strong>
+            <span class="badge bg-primary">{{ b.status }}</span>
+            <br>
+            <small class="text-muted">{{ b.start_date }} → {{ b.end_date }}</small>
+        </li>
+    {% empty %}
+        <p class="text-muted">No borrowed books.</p>
+    {% endfor %}
+</ul>
+
+</div>
+{% endblock %}

@@ -1,0 +1,39 @@
+{% extends 'base.html' %}
+{% block title %}Section {{ section.section_id }}{% endblock %}
+
+{% block content %}
+<h2 class="fw-bold mb-3"><i class="bi bi-layout-text-sidebar-reverse"></i> {{ section.course.course_name }}</h2>
+
+<div class="card mb-4">
+    <div class="card-body">
+        <p><strong>Instructor:</strong> {{ section.instructor.name }}</p>
+        <p><strong>Semester:</strong> {{ section.semester }}</p>
+    </div>
+</div>
+
+<h4 class="fw-bold mt-4">Textbooks for this Section</h4>
+
+<ul class="list-group mt-3">
+    {% for st in section_textbooks %}
+        <li class="list-group-item d-flex justify-content-between align-items-center">
+            <div>
+                <strong>{{ st.textbook.title }}</strong><br>
+                <small class="text-muted">{{ st.textbook.author }}</small>
+            </div>
+
+            <span class="badge 
+                {% if st.requirement_type|lower == 'required' %} bg-danger 
+                {% elif st.requirement_type|lower == 'recommended' %} bg-info 
+                {% else %} bg-secondary 
+                {% endif %}
+                px-3 py-2">
+                {{ st.requirement_type }}
+            </span>
+        </li>
+    {% empty %}
+        <li class="list-group-item">No textbooks assigned to this section.</li>
+    {% endfor %}
+</ul>
+
+
+{% endblock %}

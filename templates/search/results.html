@@ -1,0 +1,147 @@
+{% extends 'base.html' %}
+{% block title %}Search Results{% endblock %}
+
+{% block content %}
+<div class="fade-in">
+
+<h2 class="fw-bold mb-4">
+    <i class="bi bi-search icon-bounce"></i>
+    Results for: "{{ query }}"
+</h2>
+<!-- FILTER CHIPS -->
+<div class="mb-4 d-flex gap-2 flex-wrap">
+
+    <a href="?q={{ query }}&filter=all"
+       class="btn btn-sm {% if filter == 'all' %}btn-primary{% else %}btn-outline-primary{% endif %}">
+        All
+    </a>
+
+    <!-- <a href="?q={{ query }}&filter=students"
+       class="btn btn-sm {% if filter == 'students' %}btn-primary{% else %}btn-outline-primary{% endif %}">
+        Students
+    </a> -->
+
+    <a href="?q={{ query }}&filter=courses"
+       class="btn btn-sm {% if filter == 'courses' %}btn-primary{% else %}btn-outline-primary{% endif %}">
+        Courses
+    </a>
+
+    <a href="?q={{ query }}&filter=textbooks"
+       class="btn btn-sm {% if filter == 'textbooks' %}btn-primary{% else %}btn-outline-primary{% endif %}">
+        Textbooks
+    </a>
+
+    <a href="?q={{ query }}&filter=sections"
+       class="btn btn-sm {% if filter == 'sections' %}btn-primary{% else %}btn-outline-primary{% endif %}">
+        Sections
+    </a>
+
+    <a href="?q={{ query }}&filter=providers"
+       class="btn btn-sm {% if filter == 'providers' %}btn-primary{% else %}btn-outline-primary{% endif %}">
+        Providers
+    </a>
+
+    <a href="?q={{ query }}&filter=instructors"
+       class="btn btn-sm {% if filter == 'instructors' %}btn-primary{% else %}btn-outline-primary{% endif %}">
+        Instructors
+    </a>
+
+</div>
+
+<!-- STUDENTS -->
+{% if students %}
+<h4 class="fw-bold mt-4"><i class="bi bi-people-fill"></i> Students</h4>
+<div class="row g-4 mt-1">
+    {% for s in students %}
+    <div class="col-md-4">
+        <a href="{% url 'student_detail' s.student_id %}" class="text-decoration-none">
+            <div class="card p-3 card-hover">
+                <h5 class="fw-bold">{{ s.name }}</h5>
+                <p class="text-muted">{{ s.email }}</p>
+            </div>
+        </a>
+    </div>
+    {% endfor %}
+</div>
+{% endif %}
+
+<!-- COURSES -->
+{% if courses %}
+<h4 class="fw-bold mt-5"><i class="bi bi-book-half"></i> Courses</h4>
+<div class="row g-4 mt-1">
+    {% for c in courses %}
+    <div class="col-md-4">
+        <a href="{% url 'course_detail' c.course_id %}" class="text-decoration-none">
+            <div class="card p-3 card-hover">
+                <h5 class="fw-bold">{{ c.course_name }}</h5>
+                <p class="text-muted">{{ c.dept_name }}</p>
+            </div>
+        </a>
+    </div>
+    {% endfor %}
+</div>
+{% endif %}
+
+<!-- SECTIONS -->
+{% if sections %}
+<h4 class="fw-bold mt-5"><i class="bi bi-layout-text-sidebar-reverse"></i> Sections</h4>
+<ul class="list-group mt-3">
+    {% for sec in sections %}
+    <a href="{% url 'section_detail' sec.section_id %}" class="text-decoration-none text-dark">
+        <li class="list-group-item list-hover">
+            {{ sec.course.course_name }} —
+            {{ sec.semester }} —
+            <span class="text-muted">{{ sec.instructor.name }}</span>
+        </li>
+    </a>
+    {% endfor %}
+</ul>
+{% endif %}
+
+<!-- TEXTBOOKS -->
+{% if textbooks %}
+<h4 class="fw-bold mt-5"><i class="bi bi-book"></i> Textbooks</h4>
+<div class="row g-4 mt-1">
+    {% for t in textbooks %}
+    <div class="col-md-4">
+        <a href="{% url 'textbook_detail' t.textbook_id %}" class="text-decoration-none">
+            <div class="card p-3 card-hover">
+                <h5 class="fw-bold">{{ t.title }}</h5>
+                <p class="text-muted">{{ t.author }}</p>
+            </div>
+        </a>
+    </div>
+    {% endfor %}
+</div>
+{% endif %}
+
+<!-- PROVIDERS -->
+{% if providers %}
+<h4 class="fw-bold mt-5"><i class="bi bi-shop"></i> Providers</h4>
+<ul class="list-group mt-3">
+    {% for p in providers %}
+    <li class="list-group-item list-hover">{{ p.name }}</li>
+    {% endfor %}
+</ul>
+{% endif %}
+
+<!-- INSTRUCTORS -->
+{% if instructors %}
+<h4 class="fw-bold mt-5"><i class="bi bi-person-badge-fill"></i> Instructors</h4>
+<ul class="list-group mt-3">
+    {% for inst in instructors %}
+    <li class="list-group-item list-hover">{{ inst.name }}</li>
+    {% endfor %}
+</ul>
+{% endif %}
+
+<!-- NOTHING FOUND -->
+{% if not students and not courses and not sections and not textbooks and not providers and not instructors %}
+<div class="alert alert-warning mt-4">
+    <i class="bi bi-exclamation-circle"></i>
+    No results found.
+</div>
+{% endif %}
+
+</div>
+{% endblock %}

@@ -1,0 +1,19 @@
+{% extends 'base.html' %}
+{% block title %}Providers{% endblock %}
+
+{% block content %}
+<h2 class="mb-4 fw-bold"><i class="bi bi-shop"></i> Book Providers</h2>
+
+<div class="row g-4">
+    {% for p in providers %}
+    <div class="col-md-4">
+        <a href="{% url 'provider_detail' p.provider_id %}" class="text-decoration-none">
+            <div class="card p-3 card-hover">
+                <h5 class="fw-bold">{{ p.provider_name }}</h5>
+                <p class="text-muted mb-0">{{ p.address }}</p>
+            </div>
+        </a>
+    </div>
+    {% endfor %}
+</div>
+{% endblock %}

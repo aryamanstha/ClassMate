@@ -1,6 +1,6 @@
 from django.db import models
+from django.contrib.auth.models import User
 
-# Create your models here.
 class Student(models.Model):
     student_id = models.CharField(max_length=10, primary_key=True)
     name = models.CharField(max_length=50)
@@ -86,3 +86,18 @@ class Borrow(models.Model):
     status = models.CharField(max_length=30)
     start_date = models.DateField()
     end_date = models.DateField(null=True, blank=True)
+
+class StudentAccount(models.Model):
+    user = models.OneToOneField(User, on_delete=models.CASCADE)
+    student = models.OneToOneField(Student, on_delete=models.CASCADE)
+
+    def __str__(self):
+        return self.user.username
+
+
+class InstructorAccount(models.Model):
+    user = models.OneToOneField(User, on_delete=models.CASCADE)
+    instructor = models.OneToOneField(Instructor, on_delete=models.CASCADE)
+
+    def __str__(self):
+        return self.user.username

@@ -1,0 +1,20 @@
+{% extends 'base.html' %}
+{% block title %}Textbooks{% endblock %}
+
+{% block content %}
+<h2 class="mb-4 fw-bold"><i class="bi bi-book"></i> Textbooks</h2>
+
+<div class="row g-4">
+    {% for book in textbooks %}
+    <div class="col-md-4">
+        <a href="{% url 'textbook_detail' book.textbook_id %}" class="text-decoration-none">
+            <div class="card p-3 card-hover">
+                <h5 class="fw-bold mb-1">{{ book.title }}</h5>
+                <p class="text-muted">{{ book.author }}</p>
+                <p class="mb-0">ISBN: {{ book.isbn }}</p>
+            </div>
+        </a>
+    </div>
+    {% endfor %}
+</div>
+{% endblock %}

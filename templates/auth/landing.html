@@ -1,0 +1,111 @@
+{% extends 'base.html' %}
+{% block title %}Welcome{% endblock %}
+{% block content %}
+
+<style>
+    .landing-hero {
+        padding: 80px 0;
+        text-align: center;
+    }
+
+    .landing-title {
+        font-size: 3rem;
+        font-weight: 800;
+        letter-spacing: -1px;
+    }
+
+    .landing-subtitle {
+        font-size: 1.2rem;
+        color: var(--cm-muted);
+    }
+
+    .login-options {
+        margin-top: 60px;
+        display: grid;
+        gap: 30px;
+        grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+        max-width: 900px;
+        margin-left: auto;
+        margin-right: auto;
+    }
+
+    .login-card {
+        padding: 35px 25px;
+        border-radius: 20px;
+        background: var(--cm-card);
+        box-shadow: 0 8px 22px rgba(0,0,0,0.08);
+        transition: 0.25s ease;
+        border: 1px solid rgba(255,255,255,0.05);
+    }
+
+    .login-card:hover {
+        transform: translateY(-6px);
+        box-shadow: 0 12px 30px rgba(0,0,0,0.15);
+    }
+
+    .login-icon {
+        font-size: 45px;
+        margin-bottom: 18px;
+        color: var(--cm-primary);
+    }
+
+    .login-title {
+        font-size: 1.4rem;
+        font-weight: 700;
+        margin-bottom: 6px;
+    }
+
+    .login-desc {
+        font-size: 0.95rem;
+        color: var(--cm-muted);
+        margin-bottom: 18px;
+    }
+
+    .login-card a {
+        font-size: 0.9rem;
+        font-weight: 600;
+        text-decoration: none;
+    }
+</style>
+
+<div class="landing-hero">
+    <h1 class="landing-title">Welcome to <span class="text-primary">ClassMate</span></h1>
+    <p class="landing-subtitle">
+        Organize your academic life, courses, textbooks, and semester planning — all in one place.
+    </p>
+
+    <div class="login-options">
+
+        <!-- Student Login -->
+        <div class="login-card text-center">
+            <i class="bi bi-mortarboard login-icon"></i>
+            <div class="login-title">Students</div>
+            <div class="login-desc">Access your enrolled courses, textbooks, and semester info.</div>
+            <a href="{% url 'student_login' %}" class="btn btn-primary w-75">Login</a>
+            <br><br>
+            <a href="{% url 'student_register' %}" class="text-decoration-none">Create Account</a>
+        </div>
+
+        <!-- Instructor Login -->
+        <div class="login-card text-center">
+            <i class="bi bi-person-badge login-icon"></i>
+            <div class="login-title">Instructors</div>
+            <div class="login-desc">Manage textbook requirements and course materials.</div>
+            <a href="{% url 'instructor_login' %}" class="btn btn-info w-75 text-white">Login</a>
+            <br><br>
+            <a href="{% url 'instructor_register' %}" class="text-decoration-none">Create Account</a>
+
+        </div>
+
+        <!-- Admin Login -->
+        <div class="login-card text-center">
+            <i class="bi bi-shield-lock login-icon"></i>
+            <div class="login-title">Admins</div>
+            <div class="login-desc">Manage system data, users, and global settings.</div>
+            <a href="/admin/" class="btn btn-dark w-75">Admin Login</a>
+        </div>
+
+    </div>
+</div>
+
+{% endblock %}

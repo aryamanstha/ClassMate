@@ -1,0 +1,39 @@
+{% extends 'base.html' %}
+{% block title %}Dashboard{% endblock %}
+{% block content %}
+
+<h2 class="mb-4 fw-bold">Dashboard</h2>
+
+<div class="row g-4">
+    <div class="col-md-4">
+        <div class="card">
+            <div class="card-body">
+                <h4>Students</h4>
+                <p class="text-muted">View and explore student information.</p>
+                <a href="/students/" class="btn btn-primary w-100">View Students</a>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-4">
+        <div class="card">
+            <div class="card-body">
+                <h4>Courses</h4>
+                <p class="text-muted">Browse all courses and sections.</p>
+                <a href="/courses/" class="btn btn-primary w-100">View Courses</a>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-4">
+        <div class="card">
+            <div class="card-body">
+                <h4>Textbooks</h4>
+                <p class="text-muted">Required and recommended materials.</p>
+                <a href="/textbooks/" class="btn btn-primary w-100">View Textbooks</a>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% endblock %}

@@ -1,0 +1,37 @@
+{% extends "base.html" %}
+{% block title %}Edit Profile{% endblock %}
+
+{% block content %}
+
+<h2 class="fw-bold mb-4">Edit Profile</h2>
+
+<div class="card shadow-sm p-4">
+    <form method="post">
+        {% csrf_token %}
+
+        <div class="mb-3">
+            <label class="form-label fw-bold">Full Name</label>
+            <input type="text" name="name" value="{{ instructor.name }}" class="form-control" required>
+        </div>
+
+        <div class="mb-3">
+            <label class="form-label fw-bold">Email</label>
+            <input type="email" name="email" value="{{ instructor.email }}" class="form-control" required>
+        </div>
+
+        <div class="mb-3">
+            <label class="form-label fw-bold">Phone</label>
+            <input type="text" name="phone" value="{{ instructor.phone }}" class="form-control">
+        </div>
+
+        <div class="mb-3">
+            <label class="form-label fw-bold">Department</label>
+            <input type="text" name="department" value="{{ instructor.department }}" class="form-control">
+        </div>
+
+        <button class="btn btn-primary px-4">Save Changes</button>
+        <a href="{% url 'instructor_dashboard' %}" class="btn btn-outline-secondary px-4 ms-2">Cancel</a>
+    </form>
+</div>
+
+{% endblock %}

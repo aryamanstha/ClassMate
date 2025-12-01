@@ -1,0 +1,43 @@
+{% extends 'base.html' %}
+{% block title %}{{ course.course_name }}{% endblock %}
+
+{% block content %}
+<h2 class="fw-bold mb-3"><i class="bi bi-book-half"></i> {{ course.course_name }}</h2>
+
+<div class="card mb-4">
+    <div class="card-body">
+        <p><strong>Course ID:</strong> {{ course.course_id }}</p>
+        <p><strong>Department:</strong> {{ course.description }}</p>
+    </div>
+</div>
+
+<h4 class="fw-bold">Sections</h4>
+<ul class="list-group mt-3 list-hover">
+    {% for s in sections %}
+    <li class="list-group-item d-flex justify-content-between">
+        <div>
+            <strong>{{ s.semester }} {{s.year}}</strong>  
+            <br>
+            <span class="text-muted">{{ s.instructor.name }}</span>
+        </div>
+        <a href="{% url 'section_detail' s.section_id %}" class="btn btn-sm btn-primary">
+            View
+        </a>
+    </li>
+    {% empty %}
+        <p class="text-muted">No sections available.</p>
+    {% endfor %}
+</ul>
+
+<h4 class="fw-bold mt-4">Textbooks</h4>
+<ul class="list-group mt-3 list-hover">
+    {% for ct in course_textbooks %}
+        <li class="list-group-item">
+            <strong>{{ ct.textbook.title }}</strong>
+        </li>
+    {% empty %}
+        <p class="text-muted">No textbooks listed.</p>
+    {% endfor %}
+</ul>
+
+{% endblock %}

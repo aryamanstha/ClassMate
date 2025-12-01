@@ -1,0 +1,533 @@
+/* -------------------------------------------------------
+   GLOBAL LAYOUT
+--------------------------------------------------------*/
+body {
+    background: #f4f6fa !important;
+    font-family: "Inter", "Segoe UI", Arial, sans-serif;
+    color: #1b1b1b;
+}
+
+.page-container {
+    margin-top: 40px;
+    margin-bottom: 40px;
+}
+
+/* -------------------------------------------------------
+   NAVBAR
+--------------------------------------------------------*/
+.navbar-main {
+    background: #2b5fc0 !important;
+    padding: 14px 0;
+}
+
+.navbar-main .navbar-brand {
+    color: #fff;
+    font-size: 1.45rem;
+}
+
+.navbar-main .nav-link {
+    color: #e7edff !important;
+    margin-left: 16px;
+    font-weight: 500;
+}
+
+.navbar-main .nav-link:hover {
+    color: white !important;
+}
+
+/* -------------------------------------------------------
+   CARDS
+--------------------------------------------------------*/
+.card {
+    border: none !important;
+    border-radius: 14px !important;
+    background: #ffffff;
+    box-shadow: 0px 4px 18px rgba(0,0,0,0.06);
+    transition: 0.25s ease;
+}
+
+.card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0px 6px 20px rgba(0,0,0,0.1);
+}
+
+.card-body {
+    padding: 1.8rem !important;
+}
+
+/* -------------------------------------------------------
+   TABLES
+--------------------------------------------------------*/
+.table {
+    background: white;
+    border-radius: 12px;
+    overflow: hidden;
+}
+
+.table thead {
+    background: #e6eeff;
+    font-weight: 600;
+}
+
+.table tbody tr:hover {
+    background: #f2f6ff !important;
+    cursor: pointer;
+}
+
+/* -------------------------------------------------------
+   LISTS
+--------------------------------------------------------*/
+.list-group-item {
+    background: white;
+    border: none;
+    margin-bottom: 8px;
+    border-radius: 10px !important;
+    padding: 16px 18px;
+    box-shadow: 0px 2px 6px rgba(0,0,0,0.05);
+    transition: 0.25s ease;
+}
+
+.list-group-item:hover {
+    transform: translateX(6px);
+}
+
+/* -------------------------------------------------------
+   BUTTONS
+--------------------------------------------------------*/
+.btn-primary,
+.btn-outline-primary {
+    border-radius: 8px !important;
+    padding: 8px 18px !important;
+    font-weight: 600;
+}
+
+.btn-primary {
+    background: #2b5fc0 !important;
+    border: none;
+}
+
+.btn-primary:hover {
+    background: #244da3 !important;
+}
+
+/* -------------------------------------------------------
+   HEADINGS
+--------------------------------------------------------*/
+h2, h3, h4 {
+    letter-spacing: -0.5px;
+    font-weight: 700;
+}
+
+.text-muted {
+    color: #677189 !important;
+}
+
+/* -------------------------------------------------------
+   BADGES
+--------------------------------------------------------*/
+.badge {
+    padding: 6px 12px;
+    border-radius: 8px !important;
+    font-size: 0.8rem;
+}
+
+/* NAVBAR small helpers */
+.navbar-main .btn-outline-light {
+    color: rgba(255,255,255,0.95);
+    border-color: rgba(255,255,255,0.15);
+}
+.navbar-main .btn-outline-light:hover {
+    background: rgba(255,255,255,0.08);
+}
+
+/* Search input styling inside navbar */
+.search-input .form-control {
+    background: rgba(255,255,255,0.06);
+    border: 1px solid rgba(255,255,255,0.08);
+    color: #fff;
+}
+@media (max-width: 767px) {
+    .search-input { width: 100% !important; }
+}
+
+/* light/dark theme helpers */
+:root {
+  --cm-bg: #f4f6fa;
+  --cm-card: #ffffff;
+  --cm-text: #1b1b1b;
+  --cm-muted: #677189;
+  --cm-primary: #2b5fc0;
+}
+
+.cm-dark {
+  --cm-bg: #0f1724;
+  --cm-card: #0b1220;
+  --cm-text: #e6eef8;
+  --cm-muted: #9aa8c7;
+  --cm-primary: #3b82f6;
+}
+.cm-dark h4 {
+    color: var(--cm-text) !important;
+}
+/* In dark mode, make all card text white */
+.cm-dark .card h5,
+.cm-dark .card p,
+.cm-dark .card span,
+.cm-dark .card a,
+.cm-dark .card div {
+    color: var(--cm-text) !important;
+}
+
+/* Make muted text in cards readable */
+.cm-dark .card .text-muted {
+    color: var(--cm-muted) !important;
+}
+
+body {
+  background: var(--cm-bg) !important;
+  color: var(--cm-text);
+}
+.card {
+  background: var(--cm-card);
+}
+.text-muted {
+  color: var(--cm-muted) !important;
+}
+/* -------------------------------------------------------
+   ANIMATIONS
+--------------------------------------------------------*/
+
+/* Fade-in on page load (handled via JS triggers) */
+.fade-in {
+    animation: fadeIn 0.45s ease forwards;
+    opacity: 0;
+}
+@keyframes fadeIn {
+    0% { opacity: 0; transform: translateY(6px); }
+    100% { opacity: 1; transform: translateY(0); }
+}
+
+/* Card hover lift */
+.card-hover {
+    transition: transform .25s ease, box-shadow .25s ease;
+}
+.card-hover:hover {
+    transform: translateY(-6px);
+    box-shadow: 0px 8px 22px rgba(0,0,0,0.15);
+}
+
+/* List group hover slide */
+.list-hover {
+    transition: transform .2s ease, background .2s ease;
+}
+.list-hover:hover {
+    transform: translateX(8px);
+    background: rgba(0, 0, 0, 0.04);
+}
+
+/* Icon animation */
+.icon-bounce:hover {
+    animation: iconBounce 0.4s ease;
+}
+@keyframes iconBounce {
+    0%   { transform: translateY(0);}
+    40%  { transform: translateY(-3px);}
+    100% { transform: translateY(0);}
+}
+/* Suggestion dropdown */
+.suggestion-box {
+    position: absolute;
+    top: 65px;
+    right: 160px;
+    z-index: 2000;
+    width: 320px;
+    background: var(--cm-card);
+    border-radius: 10px;
+    box-shadow: 0px 5px 18px rgba(0,0,0,0.12);
+    display: none;
+}
+
+.suggestion-item {
+    padding: 10px 14px;
+    cursor: pointer;
+    border-bottom: 1px solid rgba(0,0,0,0.05);
+}
+
+.suggestion-item:hover {
+    background: rgba(0,0,0,0.05);
+}
+
+.cm-dark .suggestion-item:hover {
+    background: rgba(255,255,255,0.08);
+}
+
+.suggestion-type {
+    font-size: 0.75rem;
+    opacity: 0.8;
+}
+/* Filter buttons smooth */
+.btn-outline-primary {
+    border-radius: 20px !important;
+}
+
+.btn-primary, .btn-outline-primary {
+    transition: 0.2s ease;
+}
+body.dark-mode .alert {
+    background-color: #2b2b2b;
+    color: white;
+    border-color: #444;
+}
+.alert {
+    transition: opacity 0.5s ease-out;
+}
+/* Improve navbar spacing */
+.navbar-nav {
+    display: flex;
+    align-items: center;
+    gap: 1.5rem;   /* even spacing between items */
+}
+
+/* Clean nav links */
+.navbar-nav .nav-link {
+    color: white !important;
+    font-weight: 500;
+    padding: 0.4rem 0 !important;
+    display: flex;
+    align-items: center;
+    gap: 0.35rem;  /* icon and text spacing */
+    transition: 0.2s ease-in-out;
+}
+
+/* Hover */
+.navbar-nav .nav-link:hover {
+    opacity: 0.85;
+}
+
+/* Icon fixes */
+.navbar-nav .nav-link i {
+    font-size: 1.1rem;
+    line-height: 1;
+}
+
+/* Fix search box alignment */
+.search-input {
+    width: 240px;
+}
+
+.search-input input {
+    background: rgba(255, 255, 255, 0.2);
+    color: white !important;
+}
+
+.search-input input::placeholder {
+    color: rgba(255, 255, 255, 0.8);
+}
+
+/* Align entire right side */
+.navbar-right {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    margin-left: auto;
+}
+.card-hover {
+    transition: transform .2s ease, box-shadow .2s ease;
+}
+
+.card-hover:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 6px 18px rgba(0,0,0,0.15);
+}
+/* Fix instructor navbar vertical alignment */
+.nav-item-instructor {
+    display: flex;
+    align-items: center;
+}
+
+.nav-link-instructor {
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: center !important;
+    justify-content: center !important;
+    padding: 0 !important;
+    height: 60px; /* uniform height for all items */
+    line-height: 1.2 !important;
+}
+
+.nav-link-instructor i {
+    font-size: 22px; /* uniform icon size */
+    margin-bottom: 2px; /* consistent spacing under icons */
+}
+
+/* Fix misaligned profile icon */
+.nav-link-instructor.profile-item i {
+    transform: translateY(-3px);  /* adjust upward */
+}
+
+/* Make items evenly spaced and polished */
+.nav-item-instructor {
+    margin: 0 22px !important;   /* balanced spacing */
+}
+
+/* Wrapper for icon + text */
+.nav-icon-text {
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: center !important;
+    justify-content: center !important;
+    text-align: center !important;
+    transition: transform 0.25s ease, color 0.25s ease;
+}
+
+/* Icon style */
+.nav-icon-text i {
+    font-size: 1.9rem !important;
+    margin-bottom: 4px !important;
+    color: #ffffff !important;
+    transition: all 0.3s ease-in-out;
+}
+
+/* Text style */
+.nav-icon-text span {
+    font-size: 1rem !important;
+    font-weight: 600 !important;
+    letter-spacing: .3px;
+    color: #ffffff !important;
+    transition: color 0.3s ease-in-out;
+}
+
+/* Remove Bootstrap weird link spacing */
+.nav-link-instructor {
+    padding: 6px 4px !important;
+    border-radius: 10px !important;
+    display: inline-flex !important;
+}
+
+/* ✨ Modern Hover Effect */
+.nav-link-instructor:hover .nav-icon-text {
+    transform: translateY(-3px); /* soft lift animation */
+}
+
+.nav-link-instructor:hover i {
+    color: #ffeb3b !important; /* yellow glow */
+    text-shadow: 0 0 12px rgba(255, 235, 59, 0.8);
+}
+
+.nav-link-instructor:hover span {
+    color: #ffeb3b !important;
+}
+
+/* Smooth active highlight (optional) */
+.nav-item-instructor.active .nav-link-instructor {
+    border-bottom: 2px solid #ffeb3b !important;
+}
+
+/* ==========================
+   STUDENT NAVBAR ALIGNMENT
+   ========================== */
+.navbar-student-item {
+    display: flex;
+    align-items: center;
+}
+
+.navbar-student-link {
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: center !important;
+    justify-content: center !important;
+    height: 58px; /* same height for each item */
+    padding: 0 !important;
+    line-height: 1.1;
+    color: white !important;
+}
+
+.navbar-student-link i {
+    font-size: 22px !important; /* uniform icon size */
+    margin-bottom: 2px; /* consistent icon-text spacing */
+}
+
+.calendar-card {
+    background: #ffffff;
+    border-radius: 12px;
+    padding: 20px;
+}
+
+.calendar-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 12px;
+}
+
+.calendar-header h5 {
+    margin: 0;
+    font-weight: 600;
+}
+
+.calendar-nav-btn {
+    background: #f1f4ff;
+    border: none;
+    padding: 6px 12px;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 1rem;
+}
+
+.calendar-nav-btn:hover {
+    background: #dce4ff;
+}
+
+.calendar-grid {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    gap: 10px;
+    text-align: center;
+}
+
+.calendar-day-name {
+    font-weight: 600;
+    color: #555;
+}
+
+.calendar-day {
+    padding: 12px 0;
+    background: #f8f9ff;
+    border-radius: 8px;
+    font-weight: 500;
+}
+
+.calendar-day.today {
+    background: #4776e6;
+    color: white;
+    font-weight: bold;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.15);
+}
+
+.calendar-day.empty {
+    background: transparent;
+}
+
+.instructor-nav .nav-item {
+    flex: 0 0 auto;
+}
+
+.instructor-link {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    font-size: 0.85rem;
+    padding: 4px 6px !important;
+    line-height: 1.1;
+    text-align: center;
+    white-space: nowrap;
+}
+
+.instructor-link i {
+    margin-bottom: 2px;
+}
+
+/* Prevent navbar from stretching */
+.navbar-nav {
+    flex-wrap: nowrap;
+}

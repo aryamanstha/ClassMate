@@ -1,0 +1,23 @@
+{% extends "base.html" %}
+{% block title %}My Instructors{% endblock %}
+
+{% block content %}
+<h2 class="fw-bold mb-4">My Instructors</h2>
+
+<div class="row g-4">
+    {% for ins in instructors %}
+        <div class="col-md-4 col-sm-6">
+            <a href="{% url 'instructor_detail_view' ins.instructor_id %}" class="text-decoration-none text-dark">
+                <div class="card p-3 shadow-sm">
+                    <i class="bi bi-person-badge fs-1 text-primary"></i>
+                    <h5 class="fw-bold mt-2">{{ ins.name }}</h5>
+                    <p class="text-muted mb-1">{{ ins.email }}</p>
+                    <p class="text-muted small">{{ ins.department }}</p>
+                </div>
+            </a>
+        </div>
+    {% empty %}
+        <p class="text-muted">No instructors found.</p>
+    {% endfor %}
+</div>
+{% endblock %}

@@ -1,0 +1,22 @@
+{% extends 'base.html' %}
+{% block title %}My Textbooks{% endblock %}
+
+{% block content %}
+<h2 class="fw-bold mb-4">My Textbooks</h2>
+
+<div class="row g-4">
+    {% for b in textbooks %}
+    <div class="col-md-4">
+        <a href="{% url 'textbook_detail' b.textbook_id %}" class="text-decoration-none text-dark">
+            <div class="card p-3 shadow-sm">
+                <h5>{{ b.title }}</h5>
+                <p><strong>Author:</strong> {{ b.author }}</p>
+                <p><strong>Edition:</strong> {{ b.edition }}</p>
+            </div>
+        </a>
+    </div>
+    {% empty %}
+    <p class="text-muted">You have no textbooks.</p>
+    {% endfor %}
+</div>
+{% endblock %}

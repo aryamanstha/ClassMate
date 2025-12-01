@@ -1,0 +1,20 @@
+{% extends 'base.html' %}
+{% block title %}Sections{% endblock %}
+
+{% block content %}
+<h2 class="mb-4 fw-bold"><i class="bi bi-layout-text-sidebar-reverse"></i> Sections</h2>
+
+<div class="row g-4">
+    {% for section in sections %}
+    <div class="col-md-4">
+        <a href="{% url 'section_detail' section.section_id %}" class="text-decoration-none">
+            <div class="card p-3 acrd-hover">
+                <h5 class="fw-bold">{{ section.course.course_name }}</h5>
+                <p class="text-muted mb-1">{{ section.instructor.name }}</p>
+                <p class="mb-0">{{ section.semester }}</p>
+            </div>
+        </a>
+    </div>
+    {% endfor %}
+</div>
+{% endblock %}

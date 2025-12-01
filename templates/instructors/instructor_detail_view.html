@@ -1,0 +1,24 @@
+{% extends "base.html" %}
+{% block title %}Instructor Details{% endblock %}
+
+{% block content %}
+<h2 class="fw-bold mb-3">{{ instructor.name }}</h2>
+
+<div class="card p-3 shadow-sm mb-4">
+    <p><strong>Email:</strong> {{ instructor.email }}</p>
+    <p><strong>Phone:</strong> {{ instructor.phone }}</p>
+    <p><strong>Department:</strong> {{ instructor.department }}</p>
+</div>
+
+<h4 class="fw-bold">Sections Taught</h4>
+<ul class="list-group">
+    {% for sec in sections %}
+        <li class="list-group-item">
+            {{ sec.section_id }} — {{ sec.course.course_name }} ({{ sec.semester }} {{ sec.year }})
+        </li>
+    {% empty %}
+        <p class="text-muted">No sections taught.</p>
+    {% endfor %}
+</ul>
+
+{% endblock %}

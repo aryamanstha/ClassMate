@@ -1,0 +1,22 @@
+{% extends 'base.html' %}
+{% block title %}My Sections{% endblock %}
+
+{% block content %}
+<h2 class="fw-bold mb-4">My Sections</h2>
+
+<div class="row g-4">
+    {% for sec in sections %}
+    <div class="col-md-4">
+        <a href="{% url 'section_detail' sec.section_id %}" class="text-decoration-none text-dark">
+            <div class="card p-3 shadow-sm">
+                <h5>{{ sec.section_id }}</h5>
+                <p><strong>Course:</strong> {{ sec.course.course_name }}</p>
+                <p><strong>Instructor:</strong> {{ sec.instructor.name }}</p>
+            </div>
+        </a>
+    </div>
+    {% empty %}
+    <p class="text-muted">No enrolled sections.</p>
+    {% endfor %}
+</div>
+{% endblock %}
