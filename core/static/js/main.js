@@ -120,3 +120,4 @@ function selectSuggestion(text) {
   document.querySelector("form[role='search']").submit();
 }
 
+

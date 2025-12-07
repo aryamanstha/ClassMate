@@ -4,7 +4,8 @@ from . import views
 urlpatterns = [
     # path('', views.dashboard, name='dashboard'),
     path("", views.landing, name="landing"),
-
+    # Chatbot
+    path("chatbot/respond/", views.chatbot_respond, name="chatbot_respond"),
     #logout
     path('logout/', views.logout, name='logout'),
     # student auth

@@ -18,11 +18,47 @@
       /* quick small fallback for icon spacing in the navbar */
       .nav-icon { margin-right: 8px; vertical-align: -.1em; }
       .search-input { min-width: 220px; max-width: 420px; }
+      
+      /* Typing indicator animation */
+      .typing-indicator {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 4px;
+      }
+      
+      .typing-indicator span {
+        width: 8px;
+        height: 8px;
+        border-radius: 50%;
+        background-color: #0d6efd;
+        animation: typing 1.4s infinite;
+      }
+      
+      .typing-indicator span:nth-child(2) {
+        animation-delay: 0.2s;
+      }
+      
+      .typing-indicator span:nth-child(3) {
+        animation-delay: 0.4s;
+      }
+      
+      @keyframes typing {
+        0%, 60%, 100% {
+          opacity: 0.5;
+          transform: translateY(0);
+        }
+        30% {
+          opacity: 1;
+          transform: translateY(-10px);
+        }
+      }
     </style>
 
     {% block head_extra %}{% endblock %}
 </head>
 <body>
+<meta name="csrf-token" content="{{ csrf_token }}">
 <!-- Toast Notification Container -->
 <div class="toast-container position-fixed top-0 end-0 p-3" style="z-index: 2000;">
     {% if messages %}
@@ -179,6 +215,87 @@
   {% block content %}{% endblock %}
 </div>
 
+{% if show_chatbot %}
+<!-- CHAT ICON -->
+<button id="chat-launcher" class="ygpts-widgetBtn" style="
+    position: fixed;
+    bottom: 25px;
+    right: 25px;
+    width: 60px;
+    height: 60px;
+    border-radius: 50%;
+    z-index: 99999;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    background-color: #0d6efd !important;  /* BLUE */
+    color: white;
+    border: none;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25);
+">
+    <i class="bi bi-chat-dots-fill" style="font-size: 26px; color: #fff;"></i>
+</button>
+
+<!-- CHATBOX -->
+<div id="chatbox-wrapper" class="ygpt-chatbot" style="
+    position: fixed;
+    bottom: 100px;
+    right: 25px;
+    width: 520px;
+    height: 580px;
+    background: white;
+    border-radius: 14px;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.15);
+    display: flex;
+    flex-direction: column;
+    opacity: 0;
+    transform: translateY(20px);
+    transition: all 0.35s ease;
+    pointer-events: none;
+    z-index: 99998;
+">
+
+    <div class="chatbox-container">
+
+    <!-- Header -->
+    <div class="chatbox-header">
+        <i class="bi bi-robot"></i>
+        <span>ClassMate Student Assistant</span>
+        <button id="chat-close-btn" class="close-btn"
+        onclick="window.closeChatbot()">
+    <i class="bi bi-x-lg"></i>
+</button>
+
+    </div>
+
+    <!-- Messages -->
+    <div id="chat-messages" class="chatbox-messages">
+        <!-- Messages will be appended here dynamically -->
+    </div>
+
+    <!-- Typing Indicator -->
+    <div id="typing-indicator" class="typing-indicator" style="display: none; padding: 12px; text-align: center;">
+        <span></span>
+        <span></span>
+        <span></span>
+    </div>
+
+    <!-- Message input -->
+    <div class="chatbox-input-area">
+        <input id="chat-input" type="text" placeholder="Type a message..." />
+        <button id="chat-send-btn">
+            <i class="bi bi-send-fill"></i>
+        </button>
+    </div>
+
+</div>
+
+
+</div>
+{% endif %}
+
+
+
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script> 
 
@@ -268,6 +385,98 @@ document.addEventListener("DOMContentLoaded", () => {
     renderFullCalendar();
 });
 </script>
+<script>
+document.addEventListener("DOMContentLoaded", () => {
+
+    const launcher = document.getElementById("chat-launcher");
+    const chatbox = document.getElementById("chatbox-wrapper");
+    const closeBtn = document.getElementById("chat-close-btn");
+    const sendBtn = document.getElementById("chat-send-btn");
+    const input = document.getElementById("chat-input");
+    const messages = document.getElementById("chat-messages");
+    const typingIndicator = document.getElementById("typing-indicator");
+    const csrfToken = document.querySelector("meta[name='csrf-token']").content;
+
+    // Open Chatbox
+    launcher?.addEventListener("click", () => {
+        chatbox.style.opacity = "1";
+        chatbox.style.transform = "translateY(0)";
+        chatbox.style.pointerEvents = "auto";
+    });
+
+    // Close Chatbox
+    closeBtn?.addEventListener("click", () => {
+        chatbox.style.opacity = "0";
+        chatbox.style.transform = "translateY(20px)";
+        chatbox.style.pointerEvents = "none";
+    });
+
+    // Add Chat Message
+    function appendMessage(text, sender="user") {
+        const div = document.createElement("div");
+        div.className = sender === "user" ? "msg-user" : "msg-bot";
+        div.innerText = text;
+        messages.appendChild(div);
+        messages.scrollTop = messages.scrollHeight;
+    }
+
+    // Show typing indicator
+    function showTypingIndicator() {
+        typingIndicator.style.display = "flex";
+        messages.scrollTop = messages.scrollHeight;
+    }
+
+    // Hide typing indicator
+    function hideTypingIndicator() {
+        typingIndicator.style.display = "none";
+    }
+
+    // Send Message
+    async function sendMessage() {
+        const text = input.value.trim();
+        if (!text) return;
+
+        appendMessage(text, "user");
+        input.value = "";
+
+        // Disable send button and show typing indicator
+        sendBtn.disabled = true;
+        input.disabled = true;
+        showTypingIndicator();
+
+        try {
+            const res = await fetch("/chatbot/respond/", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                    "X-CSRFToken": csrfToken
+                },
+                body: JSON.stringify({ message: text })
+            });
+
+            const data = await res.json();
+            hideTypingIndicator();
+            appendMessage(data.reply, "bot");
+        } catch (err) {
+            hideTypingIndicator();
+            appendMessage("Error: Could not connect to assistant.", "bot");
+        } finally {
+            // Re-enable send button and input
+            sendBtn.disabled = false;
+            input.disabled = false;
+            input.focus();
+        }
+    }
+
+    sendBtn?.addEventListener("click", sendMessage);
+    input?.addEventListener("keydown", (e) => {
+        if (e.key === "Enter" && !input.disabled) sendMessage();
+    });
+
+});
+</script>
+
+
 
 {% block body_extra %}{% endblock %}
 </body>
