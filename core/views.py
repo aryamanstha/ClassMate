@@ -680,6 +680,63 @@ def modify_textbooks(request):
     })
 
 @login_required
+def add_textbook(request):
+    account = get_object_or_404(InstructorAccount, user=request.user)
+    instructor = account.instructor
+    
+    if request.method == "POST":
+        textbook_id = request.POST.get("textbook_id", "").strip()
+        title = request.POST.get("title", "").strip()
+        author = request.POST.get("author", "").strip()
+        edition = request.POST.get("edition", "").strip()
+        isbn = request.POST.get("isbn", "").strip()
+        price = request.POST.get("price", "").strip()
+        provider_id = request.POST.get("provider", "").strip()
+        
+        # Validation
+        if not all([textbook_id, title, author, edition, isbn, price, provider_id]):
+            messages.error(request, "All fields are required.")
+            return redirect("add_textbook")
+        
+        # Check if textbook already exists
+        if Textbook.objects.filter(textbook_id=textbook_id).exists():
+            messages.error(request, "A textbook with this ID already exists.")
+            return redirect("add_textbook")
+        
+        if Textbook.objects.filter(isbn=isbn).exists():
+            messages.error(request, "A textbook with this ISBN already exists.")
+            return redirect("add_textbook")
+        
+        # Get provider
+        provider = get_object_or_404(BookProvider, provider_id=provider_id)
+        
+        try:
+            price_decimal = float(price)
+        except ValueError:
+            messages.error(request, "Price must be a valid number.")
+            return redirect("add_textbook")
+        
+        # Create textbook
+        Textbook.objects.create(
+            textbook_id=textbook_id,
+            title=title,
+            author=author,
+            edition=edition,
+            isbn=isbn,
+            price=price_decimal,
+            provider=provider
+        )
+        
+        messages.success(request, "Textbook added successfully!")
+        return redirect("add_textbook")
+    
+    providers = BookProvider.objects.all()
+    
+    return render(request, "instructors/add_textbook.html", {
+        "providers": providers,
+    })
+
+@login_required
 def edit_section_textbooks(request, section_id):
     account = get_object_or_404(InstructorAccount, user=request.user)
     instructor = account.instructor
@@ -944,10 +1001,26 @@ def section_list(request):
 def section_detail(request, section_id):
     section = get_object_or_404(Section, section_id=section_id)
     section_textbooks = SectionTextbook.objects.filter(section=section)
+    
+    # Determine if user is instructor or student
+    is_instructor = False
+    if request.user.is_authenticated and hasattr(request.user, 'instructoraccount'):
+        is_instructor = True
+    
+    # Get all enrolled students in this section (only if instructor)
+    enrolled_students = []
+    student_count = 0
+    if is_instructor:
+        enrollments = Enrollment.objects.filter(section=section).select_related('student')
+        enrolled_students = [enr.student for enr in enrollments]
+        student_count = len(enrolled_students)
 
     context = {
         'section': section,
         'section_textbooks': section_textbooks,
+        'enrolled_students': enrolled_students,
+        'student_count': student_count,
+        'is_instructor': is_instructor,
     }
     return render(request, 'sections/detail.html', context)
 

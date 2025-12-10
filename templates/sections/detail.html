@@ -6,19 +6,65 @@
 
 <div class="card mb-4">
     <div class="card-body">
+        <p><strong>Section ID:</strong> {{ section.section_id }}</p>
         <p><strong>Instructor:</strong> {{ section.instructor.name }}</p>
-        <p><strong>Semester:</strong> {{ section.semester }}</p>
+        <p><strong>Department:</strong> {{ section.instructor.department }}</p>
+        <p><strong>Semester:</strong> {{ section.semester }} {{ section.year }}</p>
+        {% if is_instructor %}
+        <p><strong>Total Enrolled Students:</strong> <span class="badge bg-primary">{{ student_count }}</span></p>
+        {% endif %}
     </div>
 </div>
 
-<h4 class="fw-bold mt-4">Textbooks for this Section</h4>
+<!-- Enrolled Students Section (Instructor Only) -->
+{% if is_instructor %}
+<h4 class="fw-bold mt-5">Enrolled Students</h4>
+
+{% if enrolled_students %}
+<div class="table-responsive mt-3">
+    <table class="table table-hover">
+        <thead class="table-light">
+            <tr>
+                <th><i class="bi bi-person-fill"></i> Student ID</th>
+                <th><i class="bi bi-person"></i> Name</th>
+                <th><i class="bi bi-envelope"></i> Email</th>
+                <th><i class="bi bi-telephone"></i> Phone</th>
+                <th>Action</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for student in enrolled_students %}
+            <tr>
+                <td><strong>{{ student.student_id }}</strong></td>
+                <td>{{ student.name }}</td>
+                <td>{{ student.email }}</td>
+                <td>{{ student.phone }}</td>
+                <td>
+                    <a href="{% url 'student_detail' student.student_id %}" class="btn btn-sm btn-outline-primary">
+                        <i class="bi bi-eye"></i> View
+                    </a>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% else %}
+<div class="alert alert-info mt-3" role="alert">
+    <i class="bi bi-info-circle"></i> No students are enrolled in this section yet.
+</div>
+{% endif %}
+{% endif %}
+
+<!-- Textbooks Section -->
+<h4 class="fw-bold mt-5">Textbooks for this Section</h4>
 
 <ul class="list-group mt-3">
     {% for st in section_textbooks %}
         <li class="list-group-item d-flex justify-content-between align-items-center">
             <div>
                 <strong>{{ st.textbook.title }}</strong><br>
-                <small class="text-muted">{{ st.textbook.author }}</small>
+                <small class="text-muted">by {{ st.textbook.author }} | Edition: {{ st.textbook.edition }}</small>
             </div>
 
             <span class="badge 
@@ -31,7 +77,7 @@
             </span>
         </li>
     {% empty %}
-        <li class="list-group-item">No textbooks assigned to this section.</li>
+        <li class="list-group-item text-muted">No textbooks assigned to this section.</li>
     {% endfor %}
 </ul>
 

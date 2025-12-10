@@ -60,6 +60,7 @@ urlpatterns = [
     path("instructor/courses/", views.instructor_courses, name="instructor_courses"),
     path("instructor/sections/", views.instructor_sections, name="instructor_sections"),
     path("instructor/modify-textbooks/", views.modify_textbooks, name="modify_textbooks"),
+    path("instructor/add-textbook/", views.add_textbook, name="add_textbook"),
     # Instructor profile
     path("instructor/profile/edit/", views.instructor_edit_profile, name="instructor_edit_profile"),
 

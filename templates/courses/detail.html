@@ -7,7 +7,7 @@
 <div class="card mb-4">
     <div class="card-body">
         <p><strong>Course ID:</strong> {{ course.course_id }}</p>
-        <p><strong>Department:</strong> {{ course.description }}</p>
+        <p><strong>Description:</strong> {{ course.description }}</p>
     </div>
 </div>
 
@@ -29,15 +29,6 @@
     {% endfor %}
 </ul>
 
-<h4 class="fw-bold mt-4">Textbooks</h4>
-<ul class="list-group mt-3 list-hover">
-    {% for ct in course_textbooks %}
-        <li class="list-group-item">
-            <strong>{{ ct.textbook.title }}</strong>
-        </li>
-    {% empty %}
-        <p class="text-muted">No textbooks listed.</p>
-    {% endfor %}
-</ul>
+
 
 {% endblock %}

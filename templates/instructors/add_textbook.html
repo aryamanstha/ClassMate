@@ -1,0 +1,146 @@
+{% extends "base.html" %}
+{% block title %}Add Textbook{% endblock %}
+
+{% block content %}
+<div class="container mt-5">
+    <div class="row">
+        <div class="col-lg-8 mx-auto">
+            <h2 class="fw-bold mb-4">
+                <i class="bi bi-book-half"></i> Add New Textbook
+            </h2>
+            
+            <div class="card shadow-sm">
+                <div class="card-body p-4">
+                    <form method="POST" novalidate>
+                        {% csrf_token %}
+                        
+                        <div class="row">
+                            <!-- Textbook ID -->
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label fw-bold">Textbook ID <span class="text-danger">*</span></label>
+                                <input 
+                                    type="text" 
+                                    class="form-control" 
+                                    name="textbook_id"
+                                    placeholder="e.g., TB001"
+                                    required
+                                />
+                                <small class="text-muted">Unique identifier for the textbook</small>
+                            </div>
+                            
+                            <!-- Title -->
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label fw-bold">Title <span class="text-danger">*</span></label>
+                                <input 
+                                    type="text" 
+                                    class="form-control" 
+                                    name="title"
+                                    placeholder="e.g., Introduction to Algorithms"
+                                    required
+                                />
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <!-- Author -->
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label fw-bold">Author <span class="text-danger">*</span></label>
+                                <input 
+                                    type="text" 
+                                    class="form-control" 
+                                    name="author"
+                                    placeholder="e.g., Thomas H. Cormen"
+                                    required
+                                />
+                            </div>
+                            
+                            <!-- Edition -->
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label fw-bold">Edition <span class="text-danger">*</span></label>
+                                <input 
+                                    type="text" 
+                                    class="form-control" 
+                                    name="edition"
+                                    placeholder="e.g., 3rd Edition"
+                                    required
+                                />
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <!-- ISBN -->
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label fw-bold">ISBN <span class="text-danger">*</span></label>
+                                <input 
+                                    type="text" 
+                                    class="form-control" 
+                                    name="isbn"
+                                    placeholder="e.g., 978-0262033848"
+                                    required
+                                />
+                                <small class="text-muted">13-digit ISBN</small>
+                            </div>
+                            
+                            <!-- Price -->
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label fw-bold">Price ($) <span class="text-danger">*</span></label>
+                                <input 
+                                    type="number" 
+                                    class="form-control" 
+                                    name="price"
+                                    placeholder="e.g., 89.99"
+                                    step="0.01"
+                                    min="0"
+                                    required
+                                />
+                            </div>
+                        </div>
+
+                        <!-- Provider -->
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">Provider <span class="text-danger">*</span></label>
+                            <select class="form-select" name="provider" required>
+                                <option value="">-- Select a Provider --</option>
+                                {% for provider in providers %}
+                                <option value="{{ provider.provider_id }}">
+                                    {{ provider.provider_name }} ({{ provider.contact_number }})
+                                </option>
+                                {% endfor %}
+                            </select>
+                            {% if not providers %}
+                            <div class="alert alert-warning mt-2" role="alert">
+                                <i class="bi bi-exclamation-triangle"></i> 
+                                No providers available. Please contact an administrator.
+                            </div>
+                            {% endif %}
+                        </div>
+
+                        <!-- Buttons -->
+                        <div class="d-grid gap-2 d-md-flex justify-content-md-between mt-4">
+                            <a href="{% url 'instructor_dashboard' %}" class="btn btn-outline-secondary">
+                                <i class="bi bi-arrow-left"></i> Back
+                            </a>
+                            <button type="submit" class="btn btn-primary btn-lg" {% if not providers %}disabled{% endif %}>
+                                <i class="bi bi-plus-circle"></i> Add Textbook
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Info Card -->
+            <div class="alert alert-info mt-4" role="alert">
+                <h6 class="alert-heading">
+                    <i class="bi bi-info-circle"></i> Information
+                </h6>
+                <ul class="mb-0">
+                    <li>All fields marked with <span class="text-danger">*</span> are required.</li>
+                    <li>Textbook ID and ISBN must be unique across the system.</li>
+                    <li>Price should be a decimal number (e.g., 89.99).</li>
+                    <li>Select the provider where this textbook is available.</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
