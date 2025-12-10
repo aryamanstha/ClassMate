@@ -38,12 +38,7 @@ def call_ollama(prompt):
 @csrf_exempt
 @require_POST
 def chatbot_respond(request):
-    import json
-    from django.http import JsonResponse
-    from core.models import (
-        Student, Course, Instructor, Section, Textbook,
-        SectionTextbook, Enrollment, Borrow
-    )
+    
 
     data = json.loads(request.body)
     user_message = data.get("message", "").strip()
@@ -68,7 +63,6 @@ Output format:
     {{"name": "get_my_courses", "score": 0.0}},
     {{"name": "get_my_instructors", "score": 0.0}},
     {{"name": "get_my_textbooks", "score": 0.0}},
-    {{"name": "get_borrowed_books", "score": 0.0}},
     {{"name": "get_borrow_history", "score": 0.0}},
     {{"name": "get_borrow_status", "score": 0.0}},
 
