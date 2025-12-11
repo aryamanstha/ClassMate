@@ -1,11 +1,136 @@
-{% extends "admin/login.html" %}
+{% extends "base.html" %}
+
+{% block title %}Admin Login - ClassMate{% endblock %}
 
 {% block content %}
-    {{ block.super }}
+<style>
+  /* Center the login card by making the page container full-screen flex */
+  .page-container {
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  }
 
-    <div style="margin-top: 20px; text-align: center;">
-        <a href="{% url 'landing' %}" style="font-size: 15px; text-decoration: none;">
-            ← Return to Home
-        </a>
+  .admin-login-container {
+    width: 100%;
+    max-width: 450px;
+    padding: 20px;
+  }
+
+  .admin-login-card {
+    background: white;
+    border-radius: 12px;
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+    padding: 40px;
+  }
+
+  .admin-login-header {
+    text-align: center;
+    margin-bottom: 30px;
+  }
+
+  .admin-login-icon {
+    font-size: 3rem;
+    color: #667eea;
+    margin-bottom: 15px;
+    display: inline-block;
+  }
+
+  .admin-login-header h1 {
+    color: #2c3e50;
+    font-weight: 700;
+    margin-bottom: 5px;
+    font-size: 1.8rem;
+  }
+
+  .admin-login-header p {
+    color: #7f8c8d;
+    margin: 0;
+  }
+
+  .form-group { margin-bottom: 20px; }
+  .form-group label { display:block; margin-bottom:8px; color:#2c3e50; font-weight:500; }
+  .form-group input { width:100%; padding:12px; border:2px solid #ecf0f1; border-radius:6px; font-size:1rem; }
+  .form-group input:focus { outline:none; border-color:#667eea; box-shadow:0 0 0 3px rgba(102,126,234,0.1); }
+
+  .admin-login-btn { width:100%; padding:12px; background:linear-gradient(135deg,#667eea 0%,#764ba2 100%); color:white; border:none; border-radius:6px; font-weight:600; }
+  .admin-login-btn:hover { transform:translateY(-2px); box-shadow:0 5px 20px rgba(102,126,234,0.4); }
+
+  .back-to-landing { text-align:center; margin-top:20px; }
+  .back-to-landing a { color:#667eea; text-decoration:none; font-weight:500; }
+
+  .alert { margin-bottom:20px; padding:12px 15px; border-radius:6px; }
+  .alert-danger { background:#f8d7da; color:#721c24; border:1px solid #f5c6cb; }
+  .alert-success { background:#d4edda; color:#155724; border:1px solid #c3e6cb; }
+
+  @media (max-width:576px) {
+    .admin-login-card { padding:30px 20px; }
+    .admin-login-header h1 { font-size:1.5rem; }
+    .admin-login-icon { font-size:2.5rem; }
+  }
+</style>
+
+<div class="admin-login-container">
+  <div class="admin-login-card">
+    <div class="admin-login-header">
+      <div class="admin-login-icon">
+        <i class="bi bi-shield-lock"></i>
+      </div>
+      <h1>Admin Panel</h1>
+      <p>Manage ClassMate System</p>
     </div>
+
+    {% if messages %}
+      {% for message in messages %}
+        <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+          {{ message }}
+          <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+      {% endfor %}
+    {% endif %}
+
+    <form method="POST">
+      {% csrf_token %}
+
+      <div class="form-group">
+        <label for="username">Username</label>
+        <input 
+          type="text" 
+          class="form-control" 
+          id="username" 
+          name="username" 
+          placeholder="Enter your username" 
+          required
+          autofocus
+        >
+      </div>
+
+      <div class="form-group">
+        <label for="password">Password</label>
+        <input 
+          type="password" 
+          class="form-control" 
+          id="password" 
+          name="password" 
+          placeholder="Enter your password" 
+          required
+        >
+      </div>
+
+      <button type="submit" class="admin-login-btn">
+        <i class="bi bi-box-arrow-in-right"></i> Sign In
+      </button>
+    </form>
+
+    <div class="back-to-landing">
+      <a href="{% url 'landing' %}">
+        <i class="bi bi-arrow-left"></i> Back to Home
+      </a>
+    </div>
+  </div>
+</div>
+
 {% endblock %}

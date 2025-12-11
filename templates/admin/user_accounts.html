@@ -1,0 +1,94 @@
+{% extends "admin/base.html" %}
+{% block admin_content %}
+
+<div class="admin-header">
+  <div>
+    <h1><i class="bi bi-shield-lock"></i> User Accounts</h1>
+    <p class="text-muted mb-0">Manage login credentials and account access</p>
+  </div>
+  <div>
+    <span class="badge bg-primary" style="font-size: 1rem;">Total: {{ total }}</span>
+  </div>
+</div>
+
+<!-- Filter Buttons -->
+<div class="detail-section mb-3">
+  <div class="btn-group" role="group">
+    <a href="{% url 'admin_user_accounts' %}?type=all" class="btn btn-outline-primary {% if account_type == 'all' %}active{% endif %}">
+      All Users ({{ total }})
+    </a>
+    <a href="{% url 'admin_user_accounts' %}?type=student" class="btn btn-outline-success {% if account_type == 'student' %}active{% endif %}">
+      Students ({{ student_count }})
+    </a>
+    <a href="{% url 'admin_user_accounts' %}?type=instructor" class="btn btn-outline-info {% if account_type == 'instructor' %}active{% endif %}">
+      Instructors ({{ instructor_count }})
+    </a>
+    <a href="{% url 'admin_user_accounts' %}?type=admin" class="btn btn-outline-danger {% if account_type == 'admin' %}active{% endif %}">
+      Admins ({{ admin_count }})
+    </a>
+  </div>
+</div>
+
+<!-- User Accounts Table -->
+<div class="detail-section">
+  {% if users %}
+    <div class="table-wrapper">
+      <table class="table table-hover">
+        <thead>
+          <tr>
+            <th>Username</th>
+            <th>Email</th>
+            <th>Full Name</th>
+            <th>Account Type</th>
+            <th>Status</th>
+            <th>Admin Access</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for user in users %}
+          <tr>
+            <td><strong>{{ user.username }}</strong></td>
+            <td>{{ user.email|default:"-" }}</td>
+            <td>{{ user.get_full_name|default:"-" }}</td>
+            <td>
+              {% if user.studentaccount %}
+                <span class="badge bg-success">Student</span>
+              {% elif user.instructoraccount %}
+                <span class="badge bg-info">Instructor</span>
+              {% else %}
+                <span class="badge bg-secondary">None</span>
+              {% endif %}
+            </td>
+            <td>
+              {% if user.is_active %}
+                <span class="badge bg-success">Active</span>
+              {% else %}
+                <span class="badge bg-danger">Inactive</span>
+              {% endif %}
+            </td>
+            <td>
+              {% if user.is_staff %}
+                <span class="badge bg-danger">Admin</span>
+              {% else %}
+                <span class="badge bg-secondary">User</span>
+              {% endif %}
+            </td>
+            <td>
+              <a href="{% url 'admin_user_detail' user.id %}" class="btn btn-primary btn-sm">
+                <i class="bi bi-eye"></i> View
+              </a>
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  {% else %}
+    <div class="alert alert-info" role="alert">
+      <i class="bi bi-info-circle"></i> No user accounts found.
+    </div>
+  {% endif %}
+</div>
+
+{% endblock %}

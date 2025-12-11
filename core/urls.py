@@ -64,7 +64,34 @@ urlpatterns = [
     # Instructor profile
     path("instructor/profile/edit/", views.instructor_edit_profile, name="instructor_edit_profile"),
 
-
-
+    # Admin dashboard URLs
+    path("admin/login/", views.admin_login, name="admin_login"),
+    path("admin/", views.admin_dashboard, name="admin_dashboard"),
+    path("admin/instructor-approvals/", views.admin_instructor_approvals, name="admin_instructor_approvals"),
+    path("admin/instructor-approve/<int:instructor_account_id>/", views.admin_approve_instructor, name="admin_approve_instructor"),
+    path("admin/instructor-reject/<int:instructor_account_id>/", views.admin_reject_instructor, name="admin_reject_instructor"),
+    path("admin/students/", views.admin_students, name="admin_students"),
+    path("admin/student/<str:student_id>/", views.admin_student_detail, name="admin_student_detail"),
+    path("admin/student/<str:student_id>/delete/", views.admin_delete_student, name="admin_delete_student"),
+    path("admin/instructors/", views.admin_instructors, name="admin_instructors"),
+    path("admin/instructor/<str:instructor_id>/", views.admin_instructor_detail, name="admin_instructor_detail"),
+    path("admin/instructor/<str:instructor_id>/delete/", views.admin_delete_instructor, name="admin_delete_instructor"),
+    path("admin/courses/", views.admin_courses, name="admin_courses"),
+    path("admin/course/<str:course_id>/", views.admin_course_detail, name="admin_course_detail"),
+    path("admin/course/<str:course_id>/textbook/<str:textbook_id>/remove/", views.admin_remove_course_textbook, name="admin_remove_course_textbook"),
+    path("admin/sections/", views.admin_sections, name="admin_sections"),
+    path("admin/section/<str:section_id>/", views.admin_section_detail, name="admin_section_detail"),
+    path("admin/textbooks/", views.admin_textbooks, name="admin_textbooks"),
+    path("admin/textbook/<str:textbook_id>/", views.admin_textbook_detail, name="admin_textbook_detail"),
+    path("admin/providers/", views.admin_providers, name="admin_providers"),
+    path("admin/provider/<str:provider_id>/", views.admin_provider_detail, name="admin_provider_detail"),
+    path("admin/borrowed-textbooks/", views.admin_borrowed_textbooks, name="admin_borrowed_textbooks"),
+    path("admin/borrow/<int:borrow_id>/", views.admin_borrow_detail, name="admin_borrow_detail"),
+    path("admin/user-accounts/", views.admin_user_accounts, name="admin_user_accounts"),
+    path("admin/user/<int:user_id>/", views.admin_user_detail, name="admin_user_detail"),
+    path("admin/user/<int:user_id>/reset-password/", views.admin_reset_user_password, name="admin_reset_user_password"),
+    path("admin/user/<int:user_id>/disable/", views.admin_disable_user, name="admin_disable_user"),
+    path("admin/user/<int:user_id>/enable/", views.admin_enable_user, name="admin_enable_user"),
+    path("admin/user/<int:user_id>/grant-admin/", views.admin_grant_admin_access, name="admin_grant_admin_access"),
+    path("admin/user/<int:user_id>/revoke-admin/", views.admin_revoke_admin_access, name="admin_revoke_admin_access"),
 ]
-

@@ -196,6 +196,13 @@
         </form>
         {% endif %}
       
+        <!-- Admin Panel Link -->
+        {% if user.is_staff %}
+        <a href="{% url 'admin_dashboard' %}" class="btn btn-sm btn-warning" title="Admin Panel">
+            <i class="bi bi-speedometer2"></i> Admin
+        </a>
+        {% endif %}
+
         <!-- Theme toggle -->
         <button id="themeToggle" class="btn btn-sm btn-light" title="Toggle theme">
             <i id="themeIcon" class="bi bi-moon-fill"></i>

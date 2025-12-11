@@ -1,0 +1,410 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>ClassMate Admin {% block title %}{% endblock %}</title>
+
+    <!-- Bootstrap -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+
+    <!-- Bootstrap Icons -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-icons/1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
+
+    <style>
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+
+      body {
+        background-color: #f8f9fa;
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+      }
+
+      .admin-wrapper {
+        display: flex;
+        min-height: 100vh;
+      }
+
+      .admin-sidebar {
+        width: 250px;
+        background: linear-gradient(180deg, #2c3e50 0%, #34495e 100%);
+        color: white;
+        padding: 0;
+        position: fixed;
+        height: 100vh;
+        overflow-y: auto;
+        top: 0;
+        left: 0;
+        box-shadow: 2px 0 5px rgba(0, 0, 0, 0.1);
+        z-index: 1000;
+        padding-bottom: 100px; /* reserve space for footer */
+      }
+
+      .admin-sidebar h5 {
+        padding: 25px 15px;
+        margin: 0;
+        font-weight: 700;
+        border-bottom: 2px solid rgba(255, 255, 255, 0.1);
+        color: #ecf0f1;
+        font-size: 1.1rem;
+      }
+
+      .admin-sidebar ul {
+        list-style: none;
+        padding: 0;
+        margin: 0;
+      }
+
+      .admin-sidebar li {
+        margin: 0;
+      }
+
+      .admin-sidebar a {
+        display: block;
+        padding: 12px 20px;
+        color: #ecf0f1;
+        text-decoration: none;
+        transition: all 0.3s ease;
+        border-left: 3px solid transparent;
+      }
+
+      .admin-sidebar a:hover {
+        background-color: rgba(255, 255, 255, 0.1);
+        border-left-color: #3498db;
+        padding-left: 25px;
+      }
+
+      .admin-sidebar a.active {
+        background-color: #3498db;
+        border-left-color: #2980b9;
+        color: white;
+      }
+
+      .sidebar-footer {
+        position: absolute;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        padding: 15px;
+        border-top: 1px solid rgba(255, 255, 255, 0.1);
+        background: rgba(0, 0, 0, 0.2);
+      }
+
+      .sidebar-footer a {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 10px 15px;
+        margin: 0;
+        background-color: #e74c3c;
+        border: none;
+        border-left: none;
+        border-radius: 4px;
+        color: white;
+        text-decoration: none;
+        font-weight: 500;
+        transition: all 0.3s ease;
+      }
+
+      .sidebar-footer a:hover {
+        background-color: #c0392b;
+        border-left: none;
+        padding-left: 15px;
+      }
+
+      .admin-content {
+        margin-left: 250px;
+        padding: 30px;
+        flex: 1;
+        background-color: #f8f9fa;
+        min-height: 100vh;
+      }
+
+      .admin-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 30px;
+        background: white;
+        padding: 20px;
+        border-radius: 8px;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+      }
+
+      .admin-header h1 {
+        margin: 0;
+        color: #2c3e50;
+        font-size: 1.8rem;
+      }
+
+      .admin-header p {
+        margin: 0;
+      }
+
+      .stats-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 20px;
+        margin-bottom: 30px;
+      }
+
+      .stat-card {
+        background: white;
+        padding: 20px;
+        border-radius: 8px;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        border-left: 4px solid #3498db;
+      }
+
+      .stat-card h6 {
+        color: #7f8c8d;
+        font-size: 0.9rem;
+        margin: 0 0 10px 0;
+        text-transform: uppercase;
+      }
+
+      .stat-card .stat-number {
+        font-size: 2rem;
+        font-weight: 700;
+        color: #2c3e50;
+        margin: 0;
+      }
+
+      .table-wrapper {
+        background: white;
+        border-radius: 8px;
+        padding: 20px;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+      }
+
+      .table {
+        margin: 0;
+      }
+
+      .table thead th {
+        background-color: #f8f9fa;
+        color: #2c3e50;
+        font-weight: 600;
+        border-bottom: 2px solid #dee2e6;
+      }
+
+      .table tbody tr:hover {
+        background-color: #f8f9fa;
+      }
+
+      .action-buttons {
+        display: flex;
+        gap: 5px;
+        flex-wrap: wrap;
+      }
+
+      .btn-sm {
+        padding: 5px 10px;
+        font-size: 0.875rem;
+      }
+
+      .form-card {
+        background: white;
+        padding: 30px;
+        border-radius: 8px;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        max-width: 600px;
+      }
+
+      .form-card h3 {
+        margin-bottom: 20px;
+        color: #2c3e50;
+      }
+
+      .detail-section {
+        background: white;
+        padding: 20px;
+        border-radius: 8px;
+        margin-bottom: 20px;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+      }
+
+      .detail-section h4 {
+        color: #2c3e50;
+        margin-top: 0;
+        margin-bottom: 15px;
+        border-bottom: 2px solid #ecf0f1;
+        padding-bottom: 10px;
+      }
+
+      .detail-row {
+        display: grid;
+        grid-template-columns: 150px 1fr;
+        margin-bottom: 10px;
+        padding: 10px 0;
+      }
+
+      .detail-row label {
+        font-weight: 600;
+        color: #7f8c8d;
+      }
+
+      .detail-row span {
+        color: #2c3e50;
+      }
+
+      .modal-header {
+        background-color: #f8f9fa;
+        border-bottom: 1px solid #dee2e6;
+      }
+
+      .btn-primary {
+        background-color: #3498db;
+        border-color: #3498db;
+      }
+
+      .btn-primary:hover {
+        background-color: #2980b9;
+        border-color: #2980b9;
+      }
+
+      .btn-success {
+        background-color: #27ae60;
+        border-color: #27ae60;
+      }
+
+      .btn-success:hover {
+        background-color: #229954;
+        border-color: #229954;
+      }
+
+      .badge {
+        font-size: 0.85rem;
+        padding: 5px 10px;
+      }
+
+      .alert {
+        border-radius: 8px;
+      }
+
+      @media (max-width: 768px) {
+        .admin-sidebar {
+          width: 100%;
+          height: auto;
+          position: relative;
+          top: 0;
+        }
+
+        .admin-content {
+          margin-left: 0;
+        }
+
+        .stats-grid {
+          grid-template-columns: 1fr;
+        }
+
+        .admin-header {
+          flex-direction: column;
+          align-items: flex-start;
+          gap: 10px;
+        }
+      }
+    </style>
+</head>
+<body>
+  <meta name="csrf-token" content="{{ csrf_token }}">
+
+  <!-- Toast Notification Container -->
+  <div class="toast-container position-fixed top-0 end-0 p-3" style="z-index: 2000;">
+      {% if messages %}
+          {% for message in messages %}
+              <div class="toast align-items-center text-bg-{{ message.tags }} border-0 mb-3"
+                   role="alert" aria-live="assertive" aria-atomic="true" data-bs-delay="3000">
+                  <div class="d-flex">
+                      <div class="toast-body">
+                          {{ message }}
+                      </div>
+                      <button type="button" class="btn-close btn-close-white me-2 m-auto"
+                              data-bs-dismiss="toast"></button>
+                  </div>
+              </div>
+          {% endfor %}
+      {% endif %}
+  </div>
+
+  <div class="admin-wrapper">
+    <div class="admin-sidebar">
+      <h5><i class="bi bi-speedometer2"></i> ClassMate Admin Panel</h5>
+      <ul>
+        <li>
+          <a href="{% url 'admin_dashboard' %}" class="{% if request.resolver_match.url_name == 'admin_dashboard' %}active{% endif %}">
+            <i class="bi bi-house-door"></i> Dashboard
+          </a>
+        </li>
+        <li>
+          <a href="{% url 'admin_instructor_approvals' %}" class="{% if request.resolver_match.url_name == 'admin_instructor_approvals' %}active{% endif %}">
+            <i class="bi bi-check-circle"></i> Instructor Approvals
+          </a>
+        </li>
+        <li>
+          <a href="{% url 'admin_students' %}" class="{% if request.resolver_match.url_name == 'admin_students' %}active{% endif %}">
+            <i class="bi bi-people"></i> Students
+          </a>
+        </li>
+        <li>
+          <a href="{% url 'admin_instructors' %}" class="{% if request.resolver_match.url_name == 'admin_instructors' %}active{% endif %}">
+            <i class="bi bi-person-badge"></i> Instructors
+          </a>
+        </li>
+        <li>
+          <a href="{% url 'admin_courses' %}" class="{% if request.resolver_match.url_name == 'admin_courses' %}active{% endif %}">
+            <i class="bi bi-book"></i> Courses
+          </a>
+        </li>
+        <li>
+          <a href="{% url 'admin_sections' %}" class="{% if request.resolver_match.url_name == 'admin_sections' %}active{% endif %}">
+            <i class="bi bi-columns-gap"></i> Sections
+          </a>
+        </li>
+        <li>
+          <a href="{% url 'admin_textbooks' %}" class="{% if request.resolver_match.url_name == 'admin_textbooks' %}active{% endif %}">
+            <i class="bi bi-journal-bookmark-fill"></i> Textbooks
+          </a>
+        </li>
+        <li>
+          <a href="{% url 'admin_providers' %}" class="{% if request.resolver_match.url_name == 'admin_providers' %}active{% endif %}">
+            <i class="bi bi-building"></i> Providers
+          </a>
+        </li>
+        <li>
+          <a href="{% url 'admin_borrowed_textbooks' %}" class="{% if request.resolver_match.url_name == 'admin_borrowed_textbooks' %}active{% endif %}">
+            <i class="bi bi-box2"></i> Borrowed Textbooks
+          </a>
+        </li>
+        <li>
+          <a href="{% url 'admin_user_accounts' %}" class="{% if request.resolver_match.url_name == 'admin_user_accounts' %}active{% endif %}">
+            <i class="bi bi-shield-lock"></i> User Accounts
+          </a>
+        </li>
+      </ul>
+      <div class="sidebar-footer">
+        <a href="{% url 'logout' %}">
+          <i class="bi bi-box-arrow-right"></i> Logout
+        </a>
+      </div>
+    </div>
+
+    <div class="admin-content">
+      {% block admin_content %}{% endblock %}
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+  <script>
+    // Initialize Bootstrap toasts
+    const toastElements = document.querySelectorAll('.toast');
+    toastElements.forEach(toastElement => {
+      const toast = new bootstrap.Toast(toastElement);
+      toast.show();
+    });
+  </script>
+</body>
+</html>

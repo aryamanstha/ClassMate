@@ -1,0 +1,110 @@
+{% extends "admin/base.html" %}
+{% block admin_content %}
+
+<div class="admin-header">
+  <div>
+    <h1><i class="bi bi-box2"></i> Borrow Details</h1>
+    <p class="text-muted mb-0">Borrow ID: #{{ borrow.id }}</p>
+  </div>
+</div>
+
+<!-- Borrow Information -->
+<div class="detail-section">
+  <h4><i class="bi bi-info-circle"></i> Borrow Information</h4>
+  
+  <form method="POST">
+    {% csrf_token %}
+    <div class="row mb-3">
+      <div class="col-md-6">
+        <label class="form-label">Student</label>
+        <input type="text" class="form-control" value="{{ borrow.student.name }} ({{ borrow.student.student_id }})" disabled>
+      </div>
+      <div class="col-md-6">
+        <label class="form-label">Textbook</label>
+        <input type="text" class="form-control" value="{{ borrow.textbook.title }}" disabled>
+      </div>
+    </div>
+
+    <div class="row mb-3">
+      <div class="col-md-6">
+        <label class="form-label">Start Date</label>
+        <input type="date" class="form-control" value="{{ borrow.start_date|date:'Y-m-d' }}" disabled>
+      </div>
+      <div class="col-md-6">
+        <label class="form-label">Status</label>
+        <select name="status" class="form-select">
+          <option value="borrowed" {% if borrow.status == 'borrowed' %}selected{% endif %}>Borrowed</option>
+          <option value="returned" {% if borrow.status == 'returned' %}selected{% endif %}>Returned</option>
+          <option value="overdue" {% if borrow.status == 'overdue' %}selected{% endif %}>Overdue</option>
+          <option value="lost" {% if borrow.status == 'lost' %}selected{% endif %}>Lost</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="mb-3">
+      <label class="form-label">End Date (Return Date)</label>
+      <input type="date" name="end_date" class="form-control" 
+             value="{% if borrow.end_date %}{{ borrow.end_date|date:'Y-m-d' }}{% endif %}"
+             min="{{ borrow.start_date|date:'Y-m-d' }}"
+             title="End date must be after the start date ({{ borrow.start_date|date:'M d, Y' }})">
+      <small class="form-text text-muted">Must be after start date ({{ borrow.start_date|date:'M d, Y' }})</small>
+    </div>
+
+    <button type="submit" class="btn btn-primary">
+      <i class="bi bi-check-circle"></i> Save Changes
+    </button>
+  </form>
+</div>
+
+<!-- Student Information -->
+<div class="detail-section">
+  <h4><i class="bi bi-person"></i> Student Information</h4>
+  
+  <div class="detail-row">
+    <label>Name:</label>
+    <span>{{ borrow.student.name }}</span>
+  </div>
+  <div class="detail-row">
+    <label>Email:</label>
+    <span>{{ borrow.student.email }}</span>
+  </div>
+  <div class="detail-row">
+    <label>Phone:</label>
+    <span>{{ borrow.student.phone|default:"-" }}</span>
+  </div>
+</div>
+
+<!-- Textbook Information -->
+<div class="detail-section">
+  <h4><i class="bi bi-journal-bookmark-fill"></i> Textbook Information</h4>
+  
+  <div class="detail-row">
+    <label>Title:</label>
+    <span>{{ borrow.textbook.title }}</span>
+  </div>
+  <div class="detail-row">
+    <label>Author:</label>
+    <span>{{ borrow.textbook.author }}</span>
+  </div>
+  <div class="detail-row">
+    <label>ISBN:</label>
+    <span>{{ borrow.textbook.isbn }}</span>
+  </div>
+  <div class="detail-row">
+    <label>Price:</label>
+    <span>${{ borrow.textbook.price }}</span>
+  </div>
+  <div class="detail-row">
+    <label>Provider:</label>
+    <span>{{ borrow.textbook.provider.provider_name }}</span>
+  </div>
+</div>
+
+<!-- Back Button -->
+<div class="mt-3">
+  <a href="{% url 'admin_borrowed_textbooks' %}" class="btn btn-secondary">
+    <i class="bi bi-arrow-left"></i> Back to Borrowed Textbooks
+  </a>
+</div>
+
+{% endblock %}

@@ -1,0 +1,53 @@
+{% extends "admin/base.html" %}
+{% block admin_content %}
+
+<div class="admin-header">
+  <div>
+    <h1><i class="bi bi-person-badge"></i> Instructors</h1>
+    <p class="text-muted mb-0">Manage all instructors in the system</p>
+  </div>
+  <div>
+    <span class="badge bg-primary" style="font-size: 1rem;">Total: {{ total }}</span>
+  </div>
+</div>
+
+<div class="detail-section">
+  {% if instructors %}
+    <div class="table-wrapper">
+      <table class="table table-hover">
+        <thead>
+          <tr>
+            <th>Instructor ID</th>
+            <th>Name</th>
+            <th>Email</th>
+            <th>Department</th>
+            <th>Phone</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for instructor in instructors %}
+          <tr>
+            <td><strong>{{ instructor.instructor_id }}</strong></td>
+            <td>{{ instructor.name }}</td>
+            <td>{{ instructor.email }}</td>
+            <td>{{ instructor.department }}</td>
+            <td>{{ instructor.phone|default:"-" }}</td>
+            <td>
+              <a href="{% url 'admin_instructor_detail' instructor.instructor_id %}" class="btn btn-primary btn-sm">
+                <i class="bi bi-eye"></i> View
+              </a>
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  {% else %}
+    <div class="alert alert-info" role="alert">
+      <i class="bi bi-info-circle"></i> No instructors found.
+    </div>
+  {% endif %}
+</div>
+
+{% endblock %}

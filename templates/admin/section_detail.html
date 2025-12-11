@@ -1,0 +1,208 @@
+{% extends "admin/base.html" %}
+{% block admin_content %}
+
+<div class="admin-header">
+  <div>
+    <h1><i class="bi bi-columns-gap"></i> Section Details</h1>
+    <p class="text-muted mb-0">{{ section.section_id }} - {{ section.course.course_name }}</p>
+  </div>
+</div>
+
+<!-- Section Information -->
+<div class="detail-section">
+  <h4><i class="bi bi-info-circle"></i> Section Information</h4>
+  
+  <form method="POST">
+    {% csrf_token %}
+    <div class="row mb-3">
+      <div class="col-md-6">
+        <label class="form-label">Section ID</label>
+        <input type="text" class="form-control" value="{{ section.section_id }}" disabled>
+      </div>
+      <div class="col-md-6">
+        <label class="form-label">Course</label>
+        <input type="text" class="form-control" value="{{ section.course.course_name }}" disabled>
+      </div>
+    </div>
+
+    <div class="row mb-3">
+      <div class="col-md-6">
+        <label class="form-label">Instructor</label>
+        <input type="text" class="form-control" value="{{ section.instructor.name }}" disabled>
+      </div>
+    </div>
+
+    <div class="row mb-3">
+      <div class="col-md-6">
+        <label class="form-label">Semester</label>
+        <input type="text" name="semester" class="form-control" value="{{ section.semester }}" required>
+      </div>
+      <div class="col-md-6">
+        <label class="form-label">Year</label>
+        <input type="number" name="year" class="form-control" value="{{ section.year }}" required>
+      </div>
+    </div>
+
+    <button type="submit" name="update_section" class="btn btn-primary">
+      <i class="bi bi-check-circle"></i> Save Changes
+    </button>
+  </form>
+</div>
+
+<!-- Section Textbooks -->
+<div class="detail-section">
+  <h4><i class="bi bi-journal-bookmark-fill"></i> Textbooks for This Section</h4>
+  
+  {% if section_textbooks %}
+    <div class="table-wrapper">
+      <table class="table table-hover">
+        <thead>
+          <tr>
+            <th>Textbook Title</th>
+            <th>Author</th>
+            <th>ISBN</th>
+            <th>Requirement Type</th>
+            <th>Price</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for st in section_textbooks %}
+          <tr>
+            <td><strong>{{ st.textbook.title }}</strong></td>
+            <td>{{ st.textbook.author }}</td>
+            <td>{{ st.textbook.isbn }}</td>
+            <td>
+              <span class="badge bg-{% if st.requirement_type == 'required' %}danger{% else %}warning{% endif %}">
+                {{ st.requirement_type }}
+              </span>
+            </td>
+            <td>${{ st.textbook.price }}</td>
+            <td>
+              <form method="POST" style="display:inline;">
+                {% csrf_token %}
+                <input type="hidden" name="textbook_id" value="{{ st.textbook.textbook_id }}">
+                <button type="submit" name="remove_textbook" class="btn btn-danger btn-sm"
+                        onclick="return confirm('Remove this textbook?');">
+                  <i class="bi bi-trash"></i>
+                </button>
+              </form>
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  {% else %}
+    <p class="text-muted">No textbooks assigned to this section yet.</p>
+  {% endif %}
+
+  <!-- Add Textbook to Section -->
+  <div class="mt-3">
+    <h5>Assign Textbook to Section</h5>
+    <form method="POST">
+      {% csrf_token %}
+      <div class="row g-2">
+        <div class="col-md-6">
+          <select name="textbook_id" class="form-select" required>
+            <option value="">Select a textbook...</option>
+            {% for textbook in all_textbooks %}
+              <option value="{{ textbook.textbook_id }}">
+                {{ textbook.title }} ({{ textbook.isbn }})
+              </option>
+            {% endfor %}
+          </select>
+        </div>
+        <div class="col-md-3">
+          <select name="requirement_type" class="form-select">
+            <option value="required">Required</option>
+            <option value="optional">Optional</option>
+            <option value="recommended">Recommended</option>
+          </select>
+        </div>
+        <div class="col-md-3">
+          <button type="submit" name="add_textbook" class="btn btn-success w-100">
+            <i class="bi bi-plus-circle"></i> Assign
+          </button>
+        </div>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- Enrolled Students -->
+<div class="detail-section">
+  <h4><i class="bi bi-people"></i> Enrolled Students ({{ enrollments.count }})</h4>
+  
+  {% if enrollments %}
+    <div class="table-wrapper">
+      <table class="table table-hover">
+        <thead>
+          <tr>
+            <th>Student ID</th>
+            <th>Name</th>
+            <th>Email</th>
+            <th>Phone</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for enrollment in enrollments %}
+          <tr>
+            <td><strong>{{ enrollment.student.student_id }}</strong></td>
+            <td>{{ enrollment.student.name }}</td>
+            <td>{{ enrollment.student.email }}</td>
+            <td>{{ enrollment.student.phone|default:"-" }}</td>
+            <td>
+              <form method="POST" style="display:inline;">
+                {% csrf_token %}
+                <input type="hidden" name="student_id" value="{{ enrollment.student.student_id }}">
+                <button type="submit" name="remove_student" class="btn btn-danger btn-sm"
+                        onclick="return confirm('Unenroll this student?');">
+                  <i class="bi bi-trash"></i> Unenroll
+                </button>
+              </form>
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  {% else %}
+    <p class="text-muted">No students enrolled in this section.</p>
+  {% endif %}
+
+  <!-- Add Student to Section -->
+  <div class="mt-3">
+    <h5>Enroll Student in Section</h5>
+    <form method="POST">
+      {% csrf_token %}
+      <div class="row g-2">
+        <div class="col-md-9">
+          <select name="student_id" class="form-select" required>
+            <option value="">Select a student...</option>
+            {% for student in all_students %}
+              <option value="{{ student.student_id }}">
+                {{ student.name }} ({{ student.student_id }})
+              </option>
+            {% endfor %}
+          </select>
+        </div>
+        <div class="col-md-3">
+          <button type="submit" name="add_student" class="btn btn-success w-100">
+            <i class="bi bi-plus-circle"></i> Enroll
+          </button>
+        </div>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- Back Button -->
+<div class="mt-3">
+  <a href="{% url 'admin_sections' %}" class="btn btn-secondary">
+    <i class="bi bi-arrow-left"></i> Back to Sections
+  </a>
+</div>
+
+{% endblock %}

@@ -1,0 +1,65 @@
+{% extends "admin/base.html" %}
+{% block admin_content %}
+
+<div class="admin-header">
+  <div>
+    <h1><i class="bi bi-lock"></i> Revoke Admin Access</h1>
+    <p class="text-muted mb-0">Confirm revoking admin privileges from this user</p>
+  </div>
+</div>
+
+<div class="detail-section" style="max-width: 500px; margin: 0 auto;">
+  <div class="alert alert-danger mb-4" role="alert">
+    <i class="bi bi-exclamation-triangle-fill"></i> <strong>Warning:</strong> You are about to revoke admin privileges from this user.
+  </div>
+
+  <div class="card mb-4" style="border-left: 4px solid #dc3545;">
+    <div class="card-body">
+      <h5 class="card-title">User Details</h5>
+      <table class="table table-borderless mb-0">
+        <tr>
+          <td><strong>Username:</strong></td>
+          <td>{{ user.username }}</td>
+        </tr>
+        <tr>
+          <td><strong>Email:</strong></td>
+          <td>{{ user.email }}</td>
+        </tr>
+        <tr>
+          <td><strong>Full Name:</strong></td>
+          <td>{{ user.get_full_name|default:"-" }}</td>
+        </tr>
+        <tr>
+          <td><strong>Account Type:</strong></td>
+          <td>
+            {% if user.studentaccount %}
+              <span class="badge bg-success">Student</span>
+            {% elif user.instructoraccount %}
+              <span class="badge bg-info">Instructor</span>
+            {% else %}
+              <span class="badge bg-secondary">None</span>
+            {% endif %}
+          </td>
+        </tr>
+      </table>
+    </div>
+  </div>
+
+  <div class="alert alert-info mb-4" role="alert">
+    <i class="bi bi-info-circle"></i> <strong>Effect:</strong> This user will lose access to the admin panel and will only be able to use their normal student or instructor account features.
+  </div>
+
+  <form method="POST">
+    {% csrf_token %}
+    <div class="d-grid gap-2">
+      <button type="submit" class="btn btn-danger btn-lg">
+        <i class="bi bi-lock"></i> Yes, Revoke Admin Access
+      </button>
+      <a href="{% url 'admin_user_detail' user.id %}" class="btn btn-outline-secondary btn-lg">
+        <i class="bi bi-x-circle"></i> Cancel
+      </a>
+    </div>
+  </form>
+</div>
+
+{% endblock %}

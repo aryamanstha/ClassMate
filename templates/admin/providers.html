@@ -1,0 +1,86 @@
+{% extends "admin/base.html" %}
+{% block admin_content %}
+
+<div class="admin-header">
+  <div>
+    <h1><i class="bi bi-building"></i> Book Providers</h1>
+    <p class="text-muted mb-0">Manage textbook providers</p>
+  </div>
+  <button class="btn btn-success" data-bs-toggle="modal" data-bs-target="#addProviderModal">
+    <i class="bi bi-plus-circle"></i> Add New Provider
+  </button>
+</div>
+
+<!-- Add Provider Modal -->
+<div class="modal fade" id="addProviderModal" tabindex="-1">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">Add New Provider</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <form method="POST">
+        {% csrf_token %}
+        <div class="modal-body">
+          <div class="mb-3">
+            <label class="form-label">Provider Name</label>
+            <input type="text" name="provider_name" class="form-control" required>
+          </div>
+          <div class="mb-3">
+            <label class="form-label">Contact Number</label>
+            <input type="text" name="contact_number" class="form-control" required>
+          </div>
+          <div class="mb-3">
+            <label class="form-label">Address</label>
+            <textarea name="address" class="form-control" rows="3" required></textarea>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+          <button type="submit" name="add_provider" class="btn btn-primary">
+            <i class="bi bi-check"></i> Add Provider
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<div class="detail-section">
+  {% if providers %}
+    <div class="table-wrapper">
+      <table class="table table-hover">
+        <thead>
+          <tr>
+            <th>Provider ID</th>
+            <th>Provider Name</th>
+            <th>Contact Number</th>
+            <th>Address</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for provider in providers %}
+          <tr>
+            <td><strong>{{ provider.provider_id }}</strong></td>
+            <td>{{ provider.provider_name }}</td>
+            <td>{{ provider.contact_number }}</td>
+            <td>{{ provider.address|truncatewords:5 }}</td>
+            <td>
+              <a href="{% url 'admin_provider_detail' provider.provider_id %}" class="btn btn-primary btn-sm">
+                <i class="bi bi-eye"></i> View
+              </a>
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  {% else %}
+    <div class="alert alert-info" role="alert">
+      <i class="bi bi-info-circle"></i> No providers found.
+    </div>
+  {% endif %}
+</div>
+
+{% endblock %}

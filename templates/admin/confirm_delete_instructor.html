@@ -1,0 +1,59 @@
+{% extends "admin/base.html" %}
+{% block admin_content %}
+
+<div class="admin-header">
+  <div>
+    <h1><i class="bi bi-exclamation-triangle"></i> Delete Instructor</h1>
+    <p class="text-muted mb-0">{{ instructor.name }}</p>
+  </div>
+</div>
+
+<div class="detail-section" style="max-width: 600px;">
+  <div class="alert alert-danger" role="alert">
+    <i class="bi bi-exclamation-triangle-fill"></i>
+    <strong>Warning!</strong> You are about to delete this instructor account. This action is irreversible.
+  </div>
+
+  <h4>Instructor Details</h4>
+  <div class="detail-row">
+    <label>Instructor ID:</label>
+    <span>{{ instructor.instructor_id }}</span>
+  </div>
+  <div class="detail-row">
+    <label>Name:</label>
+    <span>{{ instructor.name }}</span>
+  </div>
+  <div class="detail-row">
+    <label>Email:</label>
+    <span>{{ instructor.email }}</span>
+  </div>
+  <div class="detail-row">
+    <label>Department:</label>
+    <span>{{ instructor.department }}</span>
+  </div>
+
+  <hr>
+
+  <p class="text-muted mb-3">
+    <i class="bi bi-info-circle"></i> This will also delete:
+    <ul>
+      <li>All associated sections</li>
+      <li>All enrollments in those sections</li>
+      <li>User account</li>
+    </ul>
+  </p>
+
+  <div style="display: flex; gap: 10px;">
+    <form method="POST" style="flex: 1;">
+      {% csrf_token %}
+      <button type="submit" class="btn btn-danger w-100">
+        <i class="bi bi-trash"></i> Delete Instructor
+      </button>
+    </form>
+    <a href="{% url 'admin_instructor_detail' instructor.instructor_id %}" class="btn btn-secondary w-100">
+      <i class="bi bi-x"></i> Cancel
+    </a>
+  </div>
+</div>
+
+{% endblock %}

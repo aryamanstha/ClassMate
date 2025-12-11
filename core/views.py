@@ -457,17 +457,38 @@ def student_register(request):
         last_name=request.POST["last_name"]
         username = request.POST["username"]
         password = request.POST["password"]
+        password2 = request.POST.get("password2", "")
         email = request.POST["email"]
-        student_id = request.POST["student_id"]
+        city = request.POST.get("city", "")
+        state = request.POST.get("state", "")
+        zip_code = request.POST.get("zip_code", "")
 
-        student = get_object_or_404(Student, student_id=student_id)
+        if password != password2:
+            messages.error(request, "Passwords do not match.")
+            return redirect("student_register")
+
+        # check username
+        if User.objects.filter(username=username).exists():
+            messages.error(request, "Username is already taken.")
+            return redirect("student_register")
+
+        # create Student record (student_id auto-generated)
+        student = Student.objects.create(
+            name=f"{first_name} {last_name}",
+            email=email,
+            phone=request.POST.get("phone", ""),
+            city=city,
+            state=state,
+            zip_code=zip_code,
+            password_hash=make_password(password)
+        )
 
         user = User.objects.create_user(username=username, password=password,first_name=first_name,last_name=last_name,email=email)
         StudentAccount.objects.create(user=user, student=student)
         if user:
             login(request, user)
             messages.success(request, "Registration successful!")
-            return redirect("student_login")
+            return redirect("student_dashboard")
         else:
             messages.error(request, "Registration failed. Please try again.")
             return redirect("student_register")
@@ -499,10 +520,15 @@ def instructor_login(request):
 
         if user:
             # check if user is instructor
-            if InstructorAccount.objects.filter(user=user).exists():
-                login(request, user)
-                messages.success(request, "Login successful!")
-                return redirect("instructor_dashboard")
+            account = InstructorAccount.objects.filter(user=user).first()
+            if account:
+                if account.approved:
+                    login(request, user)
+                    messages.success(request, "Login successful!")
+                    return redirect("instructor_dashboard")
+                else:
+                    messages.error(request, "Your account is awaiting admin approval.")
+                    return redirect("instructor_login")
         else:
             messages.error(request, "Invalid credentials. Please try again.")
 
@@ -515,21 +541,34 @@ def instructor_register(request):
         last_name = request.POST["last_name"]
         username = request.POST["username"]
         password = request.POST["password"]
+        password2 = request.POST.get("password2", "")
         email = request.POST["email"]
-        instructor_id = request.POST["instructor_id"]
+        phone = request.POST.get("phone", "")
+        city = request.POST.get("city", "")
+        state = request.POST.get("state", "")
+        zip_code = request.POST.get("zip_code", "")
 
-        # 1. Get the Instructor record
-        instructor = get_object_or_404(Instructor, instructor_id=instructor_id)
+        # confirm passwords
+        if password != password2:
+            messages.error(request, "Passwords do not match.")
+            return redirect("instructor_register")
 
         # 2. Check if a Django User already uses the username
         if User.objects.filter(username=username).exists():
             messages.error(request, "Username is already taken.")
             return redirect("instructor_register")
 
-        # 3. Check if this instructor already has an InstructorAccount
-        if InstructorAccount.objects.filter(instructor=instructor).exists():
-            messages.error(request, "This instructor already has an account.")
-            return redirect("instructor_register")
+        # create Instructor record (id auto-generated)
+        instructor = Instructor.objects.create(
+            name=f"{first_name} {last_name}",
+            department=request.POST.get("department", ""),
+            email=email,
+            phone=phone,
+            city=city,
+            state=state,
+            zip_code=zip_code,
+            password_hash=make_password(password)
+        )
 
         # 4. Create Django User
         user = User.objects.create_user(
@@ -540,13 +579,14 @@ def instructor_register(request):
             email=email
         )
 
-        # 5. Create InstructorAccount linking user → instructor
+        # 5. Create InstructorAccount linking user → instructor (awaiting approval)
         InstructorAccount.objects.create(
             user=user,
-            instructor=instructor
+            instructor=instructor,
+            approved=False
         )
 
-        messages.success(request, "Instructor registration successful!")
+        messages.success(request, "Instructor registration submitted. Awaiting admin approval.")
         return redirect("instructor_login")
 
     return render(request, "auth/instructor_register.html", {"hide_header": True})
@@ -679,7 +719,6 @@ def add_textbook(request):
     instructor = account.instructor
     
     if request.method == "POST":
-        textbook_id = request.POST.get("textbook_id", "").strip()
         title = request.POST.get("title", "").strip()
         author = request.POST.get("author", "").strip()
         edition = request.POST.get("edition", "").strip()
@@ -688,13 +727,8 @@ def add_textbook(request):
         provider_id = request.POST.get("provider", "").strip()
         
         # Validation
-        if not all([textbook_id, title, author, edition, isbn, price, provider_id]):
+        if not all([title, author, edition, isbn, price, provider_id]):
             messages.error(request, "All fields are required.")
-            return redirect("add_textbook")
-        
-        # Check if textbook already exists
-        if Textbook.objects.filter(textbook_id=textbook_id).exists():
-            messages.error(request, "A textbook with this ID already exists.")
             return redirect("add_textbook")
         
         if Textbook.objects.filter(isbn=isbn).exists():
@@ -710,9 +744,8 @@ def add_textbook(request):
             messages.error(request, "Price must be a valid number.")
             return redirect("add_textbook")
         
-        # Create textbook
+        # Create textbook (textbook_id auto-generated)
         Textbook.objects.create(
-            textbook_id=textbook_id,
             title=title,
             author=author,
             edition=edition,
@@ -1278,3 +1311,702 @@ def search_suggest(request):
         results.append({"type": "Course Textbook", "text": ct["textbook__title"]})
 
     return JsonResponse({"results": results})
+
+
+# ===== ADMIN DASHBOARD VIEWS =====
+
+def admin_required(view_func):
+    """Decorator to check if user is admin"""
+    def wrapper(request, *args, **kwargs):
+        if not request.user.is_authenticated or not request.user.is_staff:
+            return redirect('admin_login')
+        return view_func(request, *args, **kwargs)
+    return wrapper
+
+
+def admin_login(request):
+    """Admin login page"""
+    if request.user.is_authenticated and request.user.is_staff:
+        return redirect('admin_dashboard')
+    
+    if request.method == 'POST':
+        username = request.POST.get('username')
+        password = request.POST.get('password')
+        user = authenticate(request, username=username, password=password)
+        
+        if user is not None and user.is_staff:
+            login(request, user)
+            messages.success(request, f'Welcome back, {user.username}!')
+            return redirect('admin_dashboard')
+        else:
+            messages.error(request, 'Invalid credentials or insufficient permissions.')
+    
+    return render(request, 'admin/login.html', { 'hide_header': True })
+
+
+@admin_required
+def admin_dashboard(request):
+    """Main admin dashboard"""
+    pending_instructors = InstructorAccount.objects.filter(approved=False)
+    total_students = Student.objects.count()
+    total_instructors = Instructor.objects.count()
+    total_courses = Course.objects.count()
+    total_sections = Section.objects.count()
+    
+    context = {
+        'pending_instructors_count': pending_instructors.count(),
+        'total_students': total_students,
+        'total_instructors': total_instructors,
+        'total_courses': total_courses,
+        'total_sections': total_sections,
+        'pending_instructors': pending_instructors[:5],  # Show latest 5
+    }
+    return render(request, 'admin/dashboard.html', context)
+
+
+@admin_required
+def admin_instructor_approvals(request):
+    """View and approve/reject instructor registrations"""
+    pending = InstructorAccount.objects.filter(approved=False).select_related('user', 'instructor')
+    approved = InstructorAccount.objects.filter(approved=True).select_related('user', 'instructor')
+    
+    context = {
+        'pending_instructors': pending,
+        'approved_instructors': approved,
+    }
+    return render(request, 'admin/instructor_approvals.html', context)
+
+
+@admin_required
+def admin_approve_instructor(request, instructor_account_id):
+    """Approve an instructor registration"""
+    instructor_account = get_object_or_404(InstructorAccount, id=instructor_account_id)
+    instructor_account.approved = True
+    instructor_account.save()
+    messages.success(request, f"Instructor {instructor_account.instructor.name} has been approved.")
+    return redirect('admin_instructor_approvals')
+
+
+@admin_required
+def admin_reject_instructor(request, instructor_account_id):
+    """Reject an instructor registration"""
+    instructor_account = get_object_or_404(InstructorAccount, id=instructor_account_id)
+    user = instructor_account.user
+    instructor = instructor_account.instructor
+    
+    # Delete the InstructorAccount and User
+    instructor_account.delete()
+    user.delete()
+    messages.success(request, f"Instructor registration has been rejected.")
+    return redirect('admin_instructor_approvals')
+
+
+@admin_required
+def admin_students(request):
+    """List and manage students"""
+    students = Student.objects.all()
+    
+    context = {
+        'students': students,
+        'total': students.count(),
+    }
+    return render(request, 'admin/students.html', context)
+
+
+@admin_required
+def admin_student_detail(request, student_id):
+    """View and edit student details"""
+    student = get_object_or_404(Student, student_id=student_id)
+    enrollments = Enrollment.objects.filter(student=student).select_related('section')
+    
+    if request.method == 'POST':
+        # Update student info
+        student.name = request.POST.get('name', student.name)
+        student.email = request.POST.get('email', student.email)
+        student.phone = request.POST.get('phone', student.phone)
+        student.city = request.POST.get('city', student.city)
+        student.state = request.POST.get('state', student.state)
+        student.zip_code = request.POST.get('zip_code', student.zip_code)
+        student.save()
+        messages.success(request, f"Student {student.name} has been updated.")
+        return redirect('admin_student_detail', student_id=student_id)
+    
+    context = {
+        'student': student,
+        'enrollments': enrollments,
+    }
+    return render(request, 'admin/student_detail.html', context)
+
+
+@admin_required
+def admin_instructors(request):
+    """List and manage instructors"""
+    instructors = Instructor.objects.all()
+    
+    context = {
+        'instructors': instructors,
+        'total': instructors.count(),
+    }
+    return render(request, 'admin/instructors.html', context)
+
+
+@admin_required
+def admin_instructor_detail(request, instructor_id):
+    """View and edit instructor details"""
+    instructor = get_object_or_404(Instructor, instructor_id=instructor_id)
+    sections = Section.objects.filter(instructor=instructor)
+    
+    if request.method == 'POST':
+        # Update instructor info
+        instructor.name = request.POST.get('name', instructor.name)
+        instructor.email = request.POST.get('email', instructor.email)
+        instructor.phone = request.POST.get('phone', instructor.phone)
+        instructor.department = request.POST.get('department', instructor.department)
+        instructor.city = request.POST.get('city', instructor.city)
+        instructor.state = request.POST.get('state', instructor.state)
+        instructor.zip_code = request.POST.get('zip_code', instructor.zip_code)
+        instructor.save()
+        messages.success(request, f"Instructor {instructor.name} has been updated.")
+        return redirect('admin_instructor_detail', instructor_id=instructor_id)
+    
+    context = {
+        'instructor': instructor,
+        'sections': sections,
+    }
+    return render(request, 'admin/instructor_detail.html', context)
+
+
+@admin_required
+def admin_courses(request):
+    """List and manage courses"""
+    courses = Course.objects.all()
+    
+    if request.method == 'POST' and 'add_course' in request.POST:
+        course_id = request.POST.get('course_id')
+        course_name = request.POST.get('course_name')
+        description = request.POST.get('description', '')
+        
+        if Course.objects.filter(course_id=course_id).exists():
+            messages.error(request, f"Course {course_id} already exists.")
+        else:
+            Course.objects.create(course_id=course_id, course_name=course_name, description=description)
+            messages.success(request, f"Course {course_name} has been created.")
+            return redirect('admin_courses')
+    
+    context = {
+        'courses': courses,
+        'total': courses.count(),
+    }
+    return render(request, 'admin/courses.html', context)
+
+
+@admin_required
+def admin_course_detail(request, course_id):
+    """View and edit course details"""
+    course = get_object_or_404(Course, course_id=course_id)
+    sections = Section.objects.filter(course=course)
+    course_textbooks = CourseTextbook.objects.filter(course=course).select_related('textbook')
+    all_textbooks = Textbook.objects.all()
+    
+    if request.method == 'POST':
+        if 'update_course' in request.POST:
+            course.course_name = request.POST.get('course_name', course.course_name)
+            course.description = request.POST.get('description', course.description)
+            course.save()
+            messages.success(request, f"Course {course.course_name} has been updated.")
+            return redirect('admin_course_detail', course_id=course_id)
+        
+        elif 'add_textbook' in request.POST:
+            textbook_id = request.POST.get('textbook_id')
+            textbook = get_object_or_404(Textbook, textbook_id=textbook_id)
+            
+            if CourseTextbook.objects.filter(course=course, textbook=textbook).exists():
+                messages.error(request, "This textbook is already assigned to this course.")
+            else:
+                CourseTextbook.objects.create(course=course, textbook=textbook)
+                messages.success(request, f"Textbook {textbook.title} has been assigned to {course.course_name}.")
+                return redirect('admin_course_detail', course_id=course_id)
+    
+    context = {
+        'course': course,
+        'sections': sections,
+        'course_textbooks': course_textbooks,
+        'all_textbooks': all_textbooks,
+    }
+    return render(request, 'admin/course_detail.html', context)
+
+
+@admin_required
+def admin_remove_course_textbook(request, course_id, textbook_id):
+    """Remove textbook from course"""
+    course = get_object_or_404(Course, course_id=course_id)
+    textbook = get_object_or_404(Textbook, textbook_id=textbook_id)
+    
+    ct = CourseTextbook.objects.filter(course=course, textbook=textbook).first()
+    if ct:
+        ct.delete()
+        messages.success(request, f"Textbook has been removed from {course.course_name}.")
+    
+    return redirect('admin_course_detail', course_id=course_id)
+
+
+@admin_required
+def admin_sections(request):
+    """List and manage sections"""
+    sections = Section.objects.all().select_related('course', 'instructor')
+    
+    if request.method == 'POST' and 'add_section' in request.POST:
+        section_id = request.POST.get('section_id')
+        course_id = request.POST.get('course_id')
+        instructor_id = request.POST.get('instructor_id')
+        semester = request.POST.get('semester')
+        year = request.POST.get('year')
+        
+        try:
+            course = Course.objects.get(course_id=course_id)
+            instructor = Instructor.objects.get(instructor_id=instructor_id)
+            
+            if Section.objects.filter(section_id=section_id).exists():
+                messages.error(request, f"Section {section_id} already exists.")
+            else:
+                Section.objects.create(
+                    section_id=section_id,
+                    course=course,
+                    instructor=instructor,
+                    semester=semester,
+                    year=int(year)
+                )
+                messages.success(request, f"Section {section_id} has been created.")
+                return redirect('admin_sections')
+        except Course.DoesNotExist:
+            messages.error(request, "Course not found.")
+        except Instructor.DoesNotExist:
+            messages.error(request, "Instructor not found.")
+    
+    context = {
+        'sections': sections,
+        'total': sections.count(),
+        'courses': Course.objects.all(),
+        'instructors': Instructor.objects.all(),
+    }
+    return render(request, 'admin/sections.html', context)
+
+
+@admin_required
+def admin_section_detail(request, section_id):
+    """View and edit section details"""
+    section = get_object_or_404(Section, section_id=section_id)
+    enrollments = Enrollment.objects.filter(section=section).select_related('student')
+    section_textbooks = SectionTextbook.objects.filter(section=section).select_related('textbook')
+    all_textbooks = Textbook.objects.all()
+    
+    if request.method == 'POST':
+        if 'update_section' in request.POST:
+            section.semester = request.POST.get('semester', section.semester)
+            section.year = int(request.POST.get('year', section.year))
+            section.save()
+            messages.success(request, f"Section {section.section_id} has been updated.")
+            return redirect('admin_section_detail', section_id=section_id)
+        
+        elif 'add_textbook' in request.POST:
+            textbook_id = request.POST.get('textbook_id')
+            requirement_type = request.POST.get('requirement_type', 'required')
+            textbook = get_object_or_404(Textbook, textbook_id=textbook_id)
+            
+            if SectionTextbook.objects.filter(section=section, textbook=textbook).exists():
+                messages.error(request, "This textbook is already assigned to this section.")
+            else:
+                SectionTextbook.objects.create(
+                    section=section,
+                    textbook=textbook,
+                    requirement_type=requirement_type
+                )
+                messages.success(request, f"Textbook {textbook.title} has been assigned to {section.section_id}.")
+                return redirect('admin_section_detail', section_id=section_id)
+        
+        elif 'remove_textbook' in request.POST:
+            textbook_id = request.POST.get('textbook_id')
+            st = SectionTextbook.objects.filter(section=section, textbook__textbook_id=textbook_id).first()
+            if st:
+                st.delete()
+                messages.success(request, "Textbook has been removed from this section.")
+            return redirect('admin_section_detail', section_id=section_id)
+        
+        elif 'add_student' in request.POST:
+            student_id = request.POST.get('student_id')
+            student = get_object_or_404(Student, student_id=student_id)
+            
+            if Enrollment.objects.filter(section=section, student=student).exists():
+                messages.error(request, "This student is already enrolled in this section.")
+            else:
+                Enrollment.objects.create(section=section, student=student)
+                messages.success(request, f"Student {student.name} has been enrolled in {section.section_id}.")
+                return redirect('admin_section_detail', section_id=section_id)
+        
+        elif 'remove_student' in request.POST:
+            student_id = request.POST.get('student_id')
+            enrollment = Enrollment.objects.filter(section=section, student__student_id=student_id).first()
+            if enrollment:
+                enrollment.delete()
+                messages.success(request, "Student has been removed from this section.")
+            return redirect('admin_section_detail', section_id=section_id)
+    
+    context = {
+        'section': section,
+        'enrollments': enrollments,
+        'section_textbooks': section_textbooks,
+        'all_textbooks': all_textbooks,
+        'all_students': Student.objects.all(),
+    }
+    return render(request, 'admin/section_detail.html', context)
+
+
+@admin_required
+def admin_textbooks(request):
+    """List and manage textbooks"""
+    textbooks = Textbook.objects.all().select_related('provider')
+    
+    if request.method == 'POST' and 'add_textbook' in request.POST:
+        title = request.POST.get('title')
+        author = request.POST.get('author')
+        edition = request.POST.get('edition')
+        isbn = request.POST.get('isbn')
+        price = request.POST.get('price')
+        provider_id = request.POST.get('provider_id')
+        
+        try:
+            provider = BookProvider.objects.get(provider_id=provider_id)
+            
+            if Textbook.objects.filter(isbn=isbn).exists():
+                messages.error(request, f"Textbook with ISBN {isbn} already exists.")
+            else:
+                Textbook.objects.create(
+                    title=title,
+                    author=author,
+                    edition=edition,
+                    isbn=isbn,
+                    price=price,
+                    provider=provider
+                )
+                messages.success(request, f"Textbook {title} has been created.")
+                return redirect('admin_textbooks')
+        except BookProvider.DoesNotExist:
+            messages.error(request, "Provider not found.")
+    
+    context = {
+        'textbooks': textbooks,
+        'total': textbooks.count(),
+        'providers': BookProvider.objects.all(),
+    }
+    return render(request, 'admin/textbooks.html', context)
+
+
+@admin_required
+def admin_textbook_detail(request, textbook_id):
+    """View and edit textbook details"""
+    textbook = get_object_or_404(Textbook, textbook_id=textbook_id)
+    
+    if request.method == 'POST':
+        textbook.title = request.POST.get('title', textbook.title)
+        textbook.author = request.POST.get('author', textbook.author)
+        textbook.edition = request.POST.get('edition', textbook.edition)
+        textbook.isbn = request.POST.get('isbn', textbook.isbn)
+        textbook.price = request.POST.get('price', textbook.price)
+        textbook.save()
+        messages.success(request, f"Textbook {textbook.title} has been updated.")
+        return redirect('admin_textbook_detail', textbook_id=textbook_id)
+    
+    context = {
+        'textbook': textbook,
+    }
+    return render(request, 'admin/textbook_detail.html', context)
+
+
+@admin_required
+def admin_providers(request):
+    """List and manage book providers"""
+    providers = BookProvider.objects.all()
+    
+    if request.method == 'POST' and 'add_provider' in request.POST:
+        provider_name = request.POST.get('provider_name')
+        contact_number = request.POST.get('contact_number')
+        address = request.POST.get('address')
+        
+        BookProvider.objects.create(
+            provider_name=provider_name,
+            contact_number=contact_number,
+            address=address
+        )
+        messages.success(request, f"Provider {provider_name} has been created.")
+        return redirect('admin_providers')
+    
+    context = {
+        'providers': providers,
+        'total': providers.count(),
+    }
+    return render(request, 'admin/providers.html', context)
+
+
+@admin_required
+def admin_provider_detail(request, provider_id):
+    """View and edit provider details"""
+    provider = get_object_or_404(BookProvider, provider_id=provider_id)
+    textbooks = Textbook.objects.filter(provider=provider)
+    
+    if request.method == 'POST':
+        provider.provider_name = request.POST.get('provider_name', provider.provider_name)
+        provider.contact_number = request.POST.get('contact_number', provider.contact_number)
+        provider.address = request.POST.get('address', provider.address)
+        provider.save()
+        messages.success(request, f"Provider {provider.provider_name} has been updated.")
+        return redirect('admin_provider_detail', provider_id=provider_id)
+    
+    context = {
+        'provider': provider,
+        'textbooks': textbooks,
+    }
+    return render(request, 'admin/provider_detail.html', context)
+
+
+@admin_required
+def admin_borrowed_textbooks(request):
+    """View all borrowed textbooks"""
+    borrows = Borrow.objects.all().select_related('student', 'textbook')
+    
+    context = {
+        'borrows': borrows,
+        'total': borrows.count(),
+    }
+    return render(request, 'admin/borrowed_textbooks.html', context)
+
+
+@admin_required
+def admin_borrow_detail(request, borrow_id):
+    """View and manage borrow details"""
+    borrow = get_object_or_404(Borrow, id=borrow_id)
+    
+    if request.method == 'POST':
+        borrow.status = request.POST.get('status', borrow.status)
+        if request.POST.get('end_date'):
+            borrow.end_date = request.POST.get('end_date')
+        
+        try:
+            borrow.save()
+            messages.success(request, "Borrow record has been updated.")
+            return redirect('admin_borrow_detail', borrow_id=borrow_id)
+        except Exception as e:
+            messages.error(request, f"Error updating borrow: {str(e)}")
+    
+    context = {
+        'borrow': borrow,
+    }
+    return render(request, 'admin/borrow_detail.html', context)
+
+
+@admin_required
+def admin_delete_student(request, student_id):
+    """Delete a student"""
+    student = get_object_or_404(Student, student_id=student_id)
+    
+    if request.method == 'POST':
+        # Delete associated user account if exists
+        try:
+            student_account = StudentAccount.objects.get(student=student)
+            student_account.user.delete()  # This also deletes StudentAccount
+        except StudentAccount.DoesNotExist:
+            pass
+        
+        student_name = student.name
+        student.delete()
+        messages.success(request, f"Student {student_name} has been deleted.")
+        return redirect('admin_students')
+    
+    context = {
+        'student': student,
+    }
+    return render(request, 'admin/confirm_delete_student.html', context)
+
+
+@admin_required
+def admin_delete_instructor(request, instructor_id):
+    """Delete an instructor"""
+    instructor = get_object_or_404(Instructor, instructor_id=instructor_id)
+    
+    if request.method == 'POST':
+        # Delete associated user account if exists
+        try:
+            instructor_account = InstructorAccount.objects.get(instructor=instructor)
+            instructor_account.user.delete()  # This also deletes InstructorAccount
+        except InstructorAccount.DoesNotExist:
+            pass
+        
+        instructor_name = instructor.name
+        instructor.delete()
+        messages.success(request, f"Instructor {instructor_name} has been deleted.")
+        return redirect('admin_instructors')
+    
+    context = {
+        'instructor': instructor,
+    }
+    return render(request, 'admin/confirm_delete_instructor.html', context)
+
+
+@admin_required
+def admin_user_accounts(request):
+    """View and manage all user accounts"""
+    users = User.objects.all().prefetch_related('studentaccount', 'instructoraccount')
+    
+    # Filter by account type if specified
+    account_type = request.GET.get('type', 'all')
+    if account_type == 'student':
+        users = users.filter(studentaccount__isnull=False)
+    elif account_type == 'instructor':
+        users = users.filter(instructoraccount__isnull=False)
+    elif account_type == 'admin':
+        users = users.filter(is_staff=True)
+    
+    context = {
+        'users': users,
+        'total': users.count(),
+        'student_count': User.objects.filter(studentaccount__isnull=False).count(),
+        'instructor_count': User.objects.filter(instructoraccount__isnull=False).count(),
+        'admin_count': User.objects.filter(is_staff=True).count(),
+        'account_type': account_type,
+    }
+    return render(request, 'admin/user_accounts.html', context)
+
+
+@admin_required
+def admin_user_detail(request, user_id):
+    """View and manage user account details"""
+    user = get_object_or_404(User, id=user_id)
+    student_account = user.studentaccount if hasattr(user, 'studentaccount') else None
+    instructor_account = user.instructoraccount if hasattr(user, 'instructoraccount') else None
+    
+    if request.method == 'POST':
+        if 'update_user' in request.POST:
+            user.first_name = request.POST.get('first_name', user.first_name)
+            user.last_name = request.POST.get('last_name', user.last_name)
+            user.email = request.POST.get('email', user.email)
+            user.save()
+            messages.success(request, f"User {user.username} has been updated.")
+            return redirect('admin_user_detail', user_id=user_id)
+        
+        elif 'reset_password' in request.POST:
+            new_password = request.POST.get('new_password')
+            if new_password and len(new_password) >= 8:
+                user.set_password(new_password)
+                user.save()
+                messages.success(request, f"Password for {user.username} has been reset.")
+                return redirect('admin_user_detail', user_id=user_id)
+            else:
+                messages.error(request, "Password must be at least 8 characters long.")
+        
+        elif 'toggle_active' in request.POST:
+            user.is_active = not user.is_active
+            user.save()
+            status = "activated" if user.is_active else "deactivated"
+            messages.success(request, f"User {user.username} has been {status}.")
+            return redirect('admin_user_detail', user_id=user_id)
+        
+        elif 'toggle_staff' in request.POST:
+            user.is_staff = not user.is_staff
+            user.save()
+            status = "granted admin" if user.is_staff else "revoked admin"
+            messages.success(request, f"User {user.username} has been {status} access.")
+            return redirect('admin_user_detail', user_id=user_id)
+    
+    context = {
+        'user': user,
+        'student_account': student_account,
+        'instructor_account': instructor_account,
+        'account_type': 'student' if student_account else ('instructor' if instructor_account else 'admin'),
+    }
+    return render(request, 'admin/user_detail.html', context)
+
+
+@admin_required
+def admin_reset_user_password(request, user_id):
+    """Reset user password with confirmation"""
+    user = get_object_or_404(User, id=user_id)
+    
+    if request.method == 'POST':
+        new_password = request.POST.get('new_password')
+        confirm_password = request.POST.get('confirm_password')
+        
+        if new_password != confirm_password:
+            messages.error(request, "Passwords do not match.")
+        elif len(new_password) < 8:
+            messages.error(request, "Password must be at least 8 characters long.")
+        else:
+            user.set_password(new_password)
+            user.save()
+            messages.success(request, f"Password for {user.username} has been successfully reset.")
+            return redirect('admin_user_detail', user_id=user_id)
+    
+    context = {
+        'user': user,
+    }
+    return render(request, 'admin/reset_password.html', context)
+
+
+@admin_required
+def admin_disable_user(request, user_id):
+    """Disable/deactivate user account"""
+    user = get_object_or_404(User, id=user_id)
+    
+    if request.method == 'POST':
+        user.is_active = False
+        user.save()
+        messages.success(request, f"User {user.username} has been disabled.")
+        return redirect('admin_user_detail', user_id=user_id)
+    
+    context = {
+        'user': user,
+    }
+    return render(request, 'admin/confirm_disable_user.html', context)
+
+
+@admin_required
+def admin_enable_user(request, user_id):
+    """Enable/activate user account"""
+    user = get_object_or_404(User, id=user_id)
+    user.is_active = True
+    user.save()
+    messages.success(request, f"User {user.username} has been enabled.")
+    return redirect('admin_user_detail', user_id=user_id)
+
+
+@admin_required
+def admin_grant_admin_access(request, user_id):
+    """Grant admin/staff access to user"""
+    user = get_object_or_404(User, id=user_id)
+    
+    if request.method == 'POST':
+        user.is_staff = True
+        user.is_superuser = False
+        user.save()
+        messages.success(request, f"Admin access granted to {user.username}.")
+        return redirect('admin_user_detail', user_id=user_id)
+    
+    context = {
+        'user': user,
+    }
+    return render(request, 'admin/confirm_grant_admin.html', context)
+
+
+@admin_required
+def admin_revoke_admin_access(request, user_id):
+    """Revoke admin/staff access from user"""
+    user = get_object_or_404(User, id=user_id)
+    
+    if request.method == 'POST':
+        user.is_staff = False
+        user.save()
+        messages.success(request, f"Admin access revoked from {user.username}.")
+        return redirect('admin_user_detail', user_id=user_id)
+    
+    context = {
+        'user': user,
+    }
+    return render(request, 'admin/confirm_revoke_admin.html', context)

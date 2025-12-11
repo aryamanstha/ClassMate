@@ -1,0 +1,111 @@
+{% extends "admin/base.html" %}
+{% block admin_content %}
+
+<div class="admin-header">
+  <div>
+    <h1><i class="bi bi-journal-bookmark-fill"></i> Textbooks</h1>
+    <p class="text-muted mb-0">Manage all textbooks in the system</p>
+  </div>
+  <button class="btn btn-success" data-bs-toggle="modal" data-bs-target="#addTextbookModal">
+    <i class="bi bi-plus-circle"></i> Add New Textbook
+  </button>
+</div>
+
+<!-- Add Textbook Modal -->
+<div class="modal fade" id="addTextbookModal" tabindex="-1">
+  <div class="modal-dialog modal-lg">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">Add New Textbook</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <form method="POST">
+        {% csrf_token %}
+        <div class="modal-body">
+          <div class="mb-3">
+            <label class="form-label">Provider</label>
+            <select name="provider_id" class="form-select" required>
+              <option value="">Select a provider...</option>
+              {% for provider in providers %}
+                <option value="{{ provider.provider_id }}">{{ provider.provider_name }}</option>
+              {% endfor %}
+            </select>
+          </div>
+          <div class="mb-3">
+            <label class="form-label">Title</label>
+            <input type="text" name="title" class="form-control" required>
+          </div>
+          <div class="row mb-3">
+            <div class="col-md-6">
+              <label class="form-label">Author</label>
+              <input type="text" name="author" class="form-control" required>
+            </div>
+            <div class="col-md-6">
+              <label class="form-label">Edition</label>
+              <input type="text" name="edition" class="form-control" required>
+            </div>
+          </div>
+          <div class="row mb-3">
+            <div class="col-md-6">
+              <label class="form-label">ISBN</label>
+              <input type="text" name="isbn" class="form-control" placeholder="e.g., 978-0-123456-78-9" required>
+            </div>
+            <div class="col-md-6">
+              <label class="form-label">Price</label>
+              <input type="number" name="price" step="0.01" class="form-control" required>
+            </div>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+          <button type="submit" name="add_textbook" class="btn btn-primary">
+            <i class="bi bi-check"></i> Add Textbook
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<div class="detail-section">
+  {% if textbooks %}
+    <div class="table-wrapper">
+      <table class="table table-hover">
+        <thead>
+          <tr>
+            <th>Textbook ID</th>
+            <th>Title</th>
+            <th>Author</th>
+            <th>ISBN</th>
+            <th>Provider</th>
+            <th>Price</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for textbook in textbooks %}
+          <tr>
+            <td><strong>{{ textbook.textbook_id }}</strong></td>
+            <td>{{ textbook.title }}</td>
+            <td>{{ textbook.author }}</td>
+            <td>{{ textbook.isbn }}</td>
+            <td>{{ textbook.provider.provider_name }}</td>
+            <td>${{ textbook.price }}</td>
+            <td>
+              <a href="{% url 'admin_textbook_detail' textbook.textbook_id %}" class="btn btn-primary btn-sm">
+                <i class="bi bi-eye"></i> View
+              </a>
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  {% else %}
+    <div class="alert alert-info" role="alert">
+      <i class="bi bi-info-circle"></i> No textbooks found.
+    </div>
+  {% endif %}
+</div>
+
+{% endblock %}
