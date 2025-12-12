@@ -21,6 +21,7 @@ from django.views.decorators.csrf import csrf_exempt
 from django.conf import settings
 from django.views.decorators.http import require_POST
 import re
+from datetime import date
 
 
 DB_PATH = settings.BASE_DIR / "database" / "classmate"
@@ -547,30 +548,19 @@ def instructor_register(request):
         city = request.POST.get("city", "")
         state = request.POST.get("state", "")
         zip_code = request.POST.get("zip_code", "")
+        department = request.POST.get("department", "")
 
         # confirm passwords
         if password != password2:
             messages.error(request, "Passwords do not match.")
             return redirect("instructor_register")
 
-        # 2. Check if a Django User already uses the username
+        # Check if a Django User already uses the username
         if User.objects.filter(username=username).exists():
             messages.error(request, "Username is already taken.")
             return redirect("instructor_register")
 
-        # create Instructor record (id auto-generated)
-        instructor = Instructor.objects.create(
-            name=f"{first_name} {last_name}",
-            department=request.POST.get("department", ""),
-            email=email,
-            phone=phone,
-            city=city,
-            state=state,
-            zip_code=zip_code,
-            password_hash=make_password(password)
-        )
-
-        # 4. Create Django User
+        # Create Django User (no Instructor record yet - awaiting approval)
         user = User.objects.create_user(
             username=username,
             password=password,
@@ -579,11 +569,17 @@ def instructor_register(request):
             email=email
         )
 
-        # 5. Create InstructorAccount linking user → instructor (awaiting approval)
+        # Create InstructorAccount with pending registration data (NOT linked to Instructor yet)
         InstructorAccount.objects.create(
             user=user,
-            instructor=instructor,
-            approved=False
+            instructor=None,  # Will be created after admin approval
+            approved=False,
+            pending_department=department,
+            pending_phone=phone,
+            pending_city=city,
+            pending_state=state,
+            pending_zip_code=zip_code,
+            pending_password_hash=make_password(password)
         )
 
         messages.success(request, "Instructor registration submitted. Awaiting admin approval.")
@@ -890,13 +886,19 @@ def student_dashboard(request):
         sectiontextbook__section__in=sections
     ).select_related("provider").distinct()
 
-    # Providers from these textbooks
+    # Providers from these textbooks (kept for potential future widgets)
     providers = BookProvider.objects.filter(
         textbook__in=textbooks
     ).distinct()
 
-    # Borrowed textbooks
-    borrows = Borrow.objects.filter(student=student).select_related("textbook")
+    # Borrows by the logged in student
+    borrows = Borrow.objects.filter(student=student)
+
+    # Simple recommendations: cheapest textbooks related to student's sections
+    recommended_textbooks = textbooks.order_by('price')[:4]
+
+    # Approved (active) borrows for this student — show on dashboard
+    approved_borrows = Borrow.objects.filter(student=student, status__iexact='active').select_related('textbook')
 
     # Summary stats
     stats = {
@@ -916,12 +918,72 @@ def student_dashboard(request):
         "courses": courses,
         "textbooks": textbooks,
         "providers": providers,
-        "borrows": borrows,
+        "recommended_textbooks": recommended_textbooks,
+        "approved_borrows": approved_borrows,
         "recent_textbooks": recent_textbooks,
         "show_chatbot": True,
     }
 
     return render(request, "dashboard/student_dashboard.html", context)
+
+
+@login_required
+def student_courses(request):
+    student = request.user.studentaccount.student
+    courses = Course.objects.filter(section__enrollment__student=student).distinct()
+    return render(request, "students/student_courses.html", {"courses": courses,"show_chatbot": True})
+
+
+@login_required
+def student_request_borrow(request):
+    """Page where student can submit a borrow request. Requests are created with status 'requested' and require admin approval."""
+    account = getattr(request.user, "studentaccount", None)
+    if not account:
+        messages.error(request, "Student account not found.")
+        return redirect("landing")
+
+    student = account.student
+
+    # Textbooks available to this student (from their enrolled sections)
+    sections = Section.objects.filter(enrollment__student=student)
+    textbooks = Textbook.objects.filter(sectiontextbook__section__in=sections).select_related("provider").distinct()
+
+    if request.method == "POST":
+        textbook_id = request.POST.get("textbook_id")
+        end_date_str = request.POST.get("end_date")
+
+        if not textbook_id:
+            messages.error(request, "Please select a textbook.")
+            return redirect("student_request_borrow")
+
+        textbook = Textbook.objects.filter(textbook_id=textbook_id).first()
+        if not textbook:
+            messages.error(request, "Selected textbook not found.")
+            return redirect("student_request_borrow")
+
+        end_date = None
+        if end_date_str:
+            try:
+                end_date = date.fromisoformat(end_date_str)
+                if end_date <= date.today():
+                    messages.error(request, "End date must be a future date.")
+                    return redirect("student_request_borrow")
+            except Exception:
+                messages.error(request, "Invalid end date format.")
+                return redirect("student_request_borrow")
+
+        # Create a borrow request with status 'requested'
+        borrow = Borrow(student=student, textbook=textbook, status="requested", start_date=date.today(), end_date=end_date)
+        try:
+            borrow.full_clean()
+            borrow.save()
+            messages.success(request, "Borrow request submitted — an admin will review it.")
+            return redirect("student_dashboard")
+        except Exception as e:
+            messages.error(request, f"Could not create borrow request: {e}")
+            return redirect("student_request_borrow")
+
+    return render(request, "students/borrow_request.html", {"textbooks": textbooks, "show_chatbot": True})
 
 
 @login_required
@@ -1347,11 +1409,26 @@ def admin_login(request):
 @admin_required
 def admin_dashboard(request):
     """Main admin dashboard"""
+    from datetime import timedelta
+    
     pending_instructors = InstructorAccount.objects.filter(approved=False)
     total_students = Student.objects.count()
     total_instructors = Instructor.objects.count()
     total_courses = Course.objects.count()
     total_sections = Section.objects.count()
+    
+    # New User Registrations - this week
+    today = date.today()
+    week_start = today - timedelta(days=today.weekday())  # Monday of this week
+    new_users_this_week = User.objects.filter(date_joined__gte=week_start).count()
+    
+    # Breakdown: Students vs Instructors (this week)
+    new_students_this_week = StudentAccount.objects.filter(
+        user__date_joined__gte=week_start
+    ).count()
+    new_instructors_this_week = InstructorAccount.objects.filter(
+        user__date_joined__gte=week_start
+    ).count()
     
     context = {
         'pending_instructors_count': pending_instructors.count(),
@@ -1359,7 +1436,10 @@ def admin_dashboard(request):
         'total_instructors': total_instructors,
         'total_courses': total_courses,
         'total_sections': total_sections,
-        'pending_instructors': pending_instructors[:5],  # Show latest 5
+        # New registrations
+        'new_users_this_week': new_users_this_week,
+        'new_students_this_week': new_students_this_week,
+        'new_instructors_this_week': new_instructors_this_week,
     }
     return render(request, 'admin/dashboard.html', context)
 
@@ -1379,25 +1459,50 @@ def admin_instructor_approvals(request):
 
 @admin_required
 def admin_approve_instructor(request, instructor_account_id):
-    """Approve an instructor registration"""
+    """Approve an instructor registration and create the Instructor record"""
     instructor_account = get_object_or_404(InstructorAccount, id=instructor_account_id)
+    
+    # Create the Instructor record from pending data
+    instructor = Instructor.objects.create(
+        name=f"{instructor_account.user.first_name} {instructor_account.user.last_name}",
+        department=instructor_account.pending_department or "",
+        email=instructor_account.user.email,
+        phone=instructor_account.pending_phone or "",
+        city=instructor_account.pending_city,
+        state=instructor_account.pending_state,
+        zip_code=instructor_account.pending_zip_code,
+        password_hash=instructor_account.pending_password_hash or ""
+    )
+    
+    # Link the instructor to the account and mark as approved
+    instructor_account.instructor = instructor
     instructor_account.approved = True
     instructor_account.save()
-    messages.success(request, f"Instructor {instructor_account.instructor.name} has been approved.")
+    
+    # Clear pending data after approval
+    instructor_account.pending_department = None
+    instructor_account.pending_phone = None
+    instructor_account.pending_city = None
+    instructor_account.pending_state = None
+    instructor_account.pending_zip_code = None
+    instructor_account.pending_password_hash = None
+    instructor_account.save()
+    
+    messages.success(request, f"Instructor {instructor.name} has been approved and registered in the system.")
     return redirect('admin_instructor_approvals')
 
 
 @admin_required
 def admin_reject_instructor(request, instructor_account_id):
-    """Reject an instructor registration"""
+    """Reject an instructor registration and delete the InstructorAccount"""
     instructor_account = get_object_or_404(InstructorAccount, id=instructor_account_id)
+    username = instructor_account.user.username
     user = instructor_account.user
-    instructor = instructor_account.instructor
     
-    # Delete the InstructorAccount and User
+    # Delete the InstructorAccount and User (Instructor record was never created)
     instructor_account.delete()
     user.delete()
-    messages.success(request, f"Instructor registration has been rejected.")
+    messages.success(request, f"Instructor registration for '{username}' has been rejected.")
     return redirect('admin_instructor_approvals')
 
 
@@ -1482,16 +1587,22 @@ def admin_courses(request):
     courses = Course.objects.all()
     
     if request.method == 'POST' and 'add_course' in request.POST:
-        course_id = request.POST.get('course_id')
         course_name = request.POST.get('course_name')
         description = request.POST.get('description', '')
-        
-        if Course.objects.filter(course_id=course_id).exists():
-            messages.error(request, f"Course {course_id} already exists.")
-        else:
-            Course.objects.create(course_id=course_id, course_name=course_name, description=description)
-            messages.success(request, f"Course {course_name} has been created.")
-            return redirect('admin_courses')
+
+        # Generate a unique course_id
+        import uuid
+        def _gen_course_id():
+            return f"CRS{uuid.uuid4().hex[:6].upper()}"
+
+        course_id = _gen_course_id()
+        # ensure uniqueness
+        while Course.objects.filter(course_id=course_id).exists():
+            course_id = _gen_course_id()
+
+        Course.objects.create(course_id=course_id, course_name=course_name, description=description)
+        messages.success(request, f"Course {course_name} has been created (ID: {course_id}).")
+        return redirect('admin_courses')
     
     context = {
         'courses': courses,
@@ -1551,12 +1662,28 @@ def admin_remove_course_textbook(request, course_id, textbook_id):
 
 
 @admin_required
+def admin_delete_course(request, course_id):
+    """Delete a course after confirmation."""
+    course = get_object_or_404(Course, course_id=course_id)
+    
+    if request.method == 'POST':
+        course_name = course.course_name
+        course.delete()
+        messages.success(request, f"Course '{course_name}' has been deleted.")
+        return redirect('admin_courses')
+    
+    context = {
+        'course': course,
+    }
+    return render(request, 'admin/confirm_delete_course.html', context)
+
+
+@admin_required
 def admin_sections(request):
     """List and manage sections"""
     sections = Section.objects.all().select_related('course', 'instructor')
     
     if request.method == 'POST' and 'add_section' in request.POST:
-        section_id = request.POST.get('section_id')
         course_id = request.POST.get('course_id')
         instructor_id = request.POST.get('instructor_id')
         semester = request.POST.get('semester')
@@ -1566,18 +1693,24 @@ def admin_sections(request):
             course = Course.objects.get(course_id=course_id)
             instructor = Instructor.objects.get(instructor_id=instructor_id)
             
-            if Section.objects.filter(section_id=section_id).exists():
-                messages.error(request, f"Section {section_id} already exists.")
-            else:
-                Section.objects.create(
-                    section_id=section_id,
-                    course=course,
-                    instructor=instructor,
-                    semester=semester,
-                    year=int(year)
-                )
-                messages.success(request, f"Section {section_id} has been created.")
-                return redirect('admin_sections')
+            # generate unique section id
+            import uuid
+            def _gen_section_id():
+                return f"SEC{uuid.uuid4().hex[:6].upper()}"
+
+            section_id = _gen_section_id()
+            while Section.objects.filter(section_id=section_id).exists():
+                section_id = _gen_section_id()
+
+            Section.objects.create(
+                section_id=section_id,
+                course=course,
+                instructor=instructor,
+                semester=semester,
+                year=int(year)
+            )
+            messages.success(request, f"Section {section_id} has been created.")
+            return redirect('admin_sections')
         except Course.DoesNotExist:
             messages.error(request, "Course not found.")
         except Instructor.DoesNotExist:
@@ -1662,6 +1795,23 @@ def admin_section_detail(request, section_id):
 
 
 @admin_required
+def admin_delete_section(request, section_id):
+    """Delete a section after confirmation."""
+    section = get_object_or_404(Section, section_id=section_id)
+    
+    if request.method == 'POST':
+        section_id_display = section.section_id
+        section.delete()
+        messages.success(request, f"Section '{section_id_display}' has been deleted.")
+        return redirect('admin_sections')
+    
+    context = {
+        'section': section,
+    }
+    return render(request, 'admin/confirm_delete_section.html', context)
+
+
+@admin_required
 def admin_textbooks(request):
     """List and manage textbooks"""
     textbooks = Textbook.objects.all().select_related('provider')
@@ -1723,6 +1873,23 @@ def admin_textbook_detail(request, textbook_id):
 
 
 @admin_required
+def admin_delete_textbook(request, textbook_id):
+    """Delete a textbook after confirmation."""
+    textbook = get_object_or_404(Textbook, textbook_id=textbook_id)
+    
+    if request.method == 'POST':
+        textbook_title = textbook.title
+        textbook.delete()
+        messages.success(request, f"Textbook '{textbook_title}' has been deleted.")
+        return redirect('admin_textbooks')
+    
+    context = {
+        'textbook': textbook,
+    }
+    return render(request, 'admin/confirm_delete_textbook.html', context)
+
+
+@admin_required
 def admin_providers(request):
     """List and manage book providers"""
     providers = BookProvider.objects.all()
@@ -1769,6 +1936,23 @@ def admin_provider_detail(request, provider_id):
 
 
 @admin_required
+def admin_delete_provider(request, provider_id):
+    """Delete a provider after confirmation."""
+    provider = get_object_or_404(BookProvider, provider_id=provider_id)
+    
+    if request.method == 'POST':
+        provider_name = provider.provider_name
+        provider.delete()
+        messages.success(request, f"Provider '{provider_name}' has been deleted.")
+        return redirect('admin_providers')
+    
+    context = {
+        'provider': provider,
+    }
+    return render(request, 'admin/confirm_delete_provider.html', context)
+
+
+@admin_required
 def admin_borrowed_textbooks(request):
     """View all borrowed textbooks"""
     borrows = Borrow.objects.all().select_related('student', 'textbook')
@@ -1801,6 +1985,52 @@ def admin_borrow_detail(request, borrow_id):
         'borrow': borrow,
     }
     return render(request, 'admin/borrow_detail.html', context)
+
+
+@admin_required
+def admin_approve_borrow(request, borrow_id):
+    borrow = get_object_or_404(Borrow, id=borrow_id)
+    if request.method == 'POST':
+        borrow.status = 'active'
+        # set start_date to approval date if not set
+        if not borrow.start_date:
+            borrow.start_date = date.today()
+        try:
+            borrow.save()
+            messages.success(request, f"Borrow request #{borrow.id} approved and activated.")
+        except Exception as e:
+            messages.error(request, f"Could not approve borrow: {e}")
+    return redirect('admin_borrowed_textbooks')
+
+
+@admin_required
+def admin_reject_borrow(request, borrow_id):
+    borrow = get_object_or_404(Borrow, id=borrow_id)
+    if request.method == 'POST':
+        borrow.status = 'rejected'
+        try:
+            borrow.save()
+            messages.success(request, f"Borrow request #{borrow.id} has been rejected.")
+        except Exception as e:
+            messages.error(request, f"Could not reject borrow: {e}")
+    return redirect('admin_borrowed_textbooks')
+
+
+@admin_required
+def admin_delete_borrow(request, borrow_id):
+    """Delete a borrow record after confirmation."""
+    borrow = get_object_or_404(Borrow, id=borrow_id)
+    
+    if request.method == 'POST':
+        borrow_id_display = borrow.id
+        borrow.delete()
+        messages.success(request, f"Borrow record #{borrow_id_display} has been deleted.")
+        return redirect('admin_borrowed_textbooks')
+    
+    context = {
+        'borrow': borrow,
+    }
+    return render(request, 'admin/confirm_delete_borrow.html', context)
 
 
 @admin_required
@@ -1975,6 +2205,23 @@ def admin_enable_user(request, user_id):
     user.save()
     messages.success(request, f"User {user.username} has been enabled.")
     return redirect('admin_user_detail', user_id=user_id)
+
+
+@admin_required
+def admin_delete_user(request, user_id):
+    """Delete a user account after confirmation."""
+    user = get_object_or_404(User, id=user_id)
+    
+    if request.method == 'POST':
+        username = user.username
+        user.delete()
+        messages.success(request, f"User account '{username}' has been deleted.")
+        return redirect('admin_user_accounts')
+    
+    context = {
+        'user': user,
+    }
+    return render(request, 'admin/confirm_delete_user.html', context)
 
 
 @admin_required

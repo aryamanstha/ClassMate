@@ -22,6 +22,15 @@ def generate_textbook_id():
     return f"TXB{uuid.uuid4().hex[:6].upper()}"
 
 
+def generate_course_id():
+    # Course ID like CRSxxxx (6 hex chars)
+    return f"CRS{uuid.uuid4().hex[:6].upper()}"
+
+
+def generate_section_id():
+    # Section ID like SECxxxx (6 hex chars)
+    return f"SEC{uuid.uuid4().hex[:6].upper()}"
+
 class Student(models.Model):
     student_id = models.CharField(max_length=12, primary_key=True, default=generate_student_id, editable=False)
     name = models.CharField(max_length=50)
@@ -53,7 +62,7 @@ class Instructor(models.Model):
 
 
 class Course(models.Model):
-    course_id = models.CharField(max_length=10, primary_key=True)
+    course_id = models.CharField(max_length=10, primary_key=True, default=generate_course_id, editable=False)
     course_name = models.CharField(max_length=75)
     description = models.CharField(max_length=200)
 
@@ -62,7 +71,7 @@ class Course(models.Model):
 
 
 class Section(models.Model):
-    section_id = models.CharField(max_length=20, primary_key=True)
+    section_id = models.CharField(max_length=20, primary_key=True, default=generate_section_id, editable=False)
     course = models.ForeignKey(Course, on_delete=models.CASCADE)
     instructor = models.ForeignKey(Instructor, on_delete=models.CASCADE)
     year = models.IntegerField()
@@ -137,9 +146,17 @@ class StudentAccount(models.Model):
 
 class InstructorAccount(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE)
-    instructor = models.OneToOneField(Instructor, on_delete=models.CASCADE)
+    instructor = models.OneToOneField(Instructor, on_delete=models.CASCADE, null=True, blank=True)
     # admin approval required for instructors
     approved = models.BooleanField(default=False)
+    
+    # Pending registration data (stored until approval)
+    pending_department = models.CharField(max_length=30, blank=True, null=True)
+    pending_phone = models.CharField(max_length=15, blank=True, null=True)
+    pending_city = models.CharField(max_length=50, blank=True, null=True)
+    pending_state = models.CharField(max_length=50, blank=True, null=True)
+    pending_zip_code = models.CharField(max_length=12, blank=True, null=True)
+    pending_password_hash = models.CharField(max_length=128, blank=True, null=True)
 
     def __str__(self):
         return self.user.username

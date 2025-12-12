@@ -1,0 +1,35 @@
+{% extends 'base.html' %}
+{% block title %}Borrow Request{% endblock %}
+
+{% block content %}
+<div class="row">
+  <div class="col-md-8">
+    <h3 class="fw-bold">Request to Borrow a Textbook</h3>
+    <p class="text-muted">Submit a borrow request and an admin will approve it.</p>
+
+    <form method="post">
+      {% csrf_token %}
+      <div class="mb-3">
+        <label class="form-label">Select Textbook</label>
+        <select name="textbook_id" class="form-select" required>
+          <option value="">-- Select a textbook --</option>
+          {% for tb in textbooks %}
+            <option value="{{ tb.textbook_id }}">{{ tb.title }} — {{ tb.author }}</option>
+          {% endfor %}
+        </select>
+      </div>
+
+      <div class="mb-3">
+        <label class="form-label">Return By (optional)</label>
+        <input type="date" name="end_date" class="form-control">
+        <small class="text-muted">Optional: choose a due date for the borrow.</small>
+      </div>
+
+      <div class="mb-3">
+        <button class="btn btn-primary" type="submit">Submit Request</button>
+        <a href="{% url 'student_dashboard' %}" class="btn btn-secondary ms-2">Cancel</a>
+      </div>
+    </form>
+  </div>
+</div>
+{% endblock %}

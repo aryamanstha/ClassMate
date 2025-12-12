@@ -43,47 +43,57 @@
                 </div>
             </div>
         </div>
-
-
-        <!-- RECENT TEXTBOOKS -->
-        <h4 class="fw-bold mt-5">Recently Added Textbooks</h4>
-        <div class="row g-4 mt-1">
-            {% for tb in recent_textbooks %}
-            <div class="col-md-3 col-sm-6">
-                <a href="{% url 'textbook_detail' tb.textbook_id %}" class="text-decoration-none text-dark">
-                    <div class="card p-3 shadow-sm h-100 card-hover">
-                        <i class="bi bi-journal-bookmark-fill fs-1 text-info"></i>
-                        <h6 class="mt-2 fw-bold">{{ tb.title }}</h6>
-                        <p class="text-muted small">{{ tb.author }}</p>
+                <!-- Recommended Textbooks -->
+                <div class="row g-4 mt-5">
+                    <div class="col-12">
+                        <h4 class="fw-bold mb-3">Recommended For You</h4>
+                        <div class="row g-3">
+                            {% for tb in recommended_textbooks %}
+                            <div class="col-md-6 col-lg-4">
+                                <div class="card p-3 shadow-sm h-100">
+                                    <h6 class="fw-bold mb-1">{{ tb.title }}</h6>
+                                    <p class="small text-muted mb-1">{{ tb.author }} — {{ tb.edition }}</p>
+                                    <p class="mb-2 small">Provider: {{ tb.provider.provider_name }}</p>
+                                    <div class="d-flex justify-content-between align-items-center">
+                                        <div class="text-primary fw-semibold">${{ tb.price }}</div>
+                                        <a href="{% url 'textbook_detail' tb.textbook_id %}" class="btn btn-sm btn-outline-primary">View</a>
+                                    </div>
+                                </div>
+                            </div>
+                            {% empty %}
+                            <div class="col-12">
+                                <p class="text-muted">No recommendations available right now.</p>
+                            </div>
+                            {% endfor %}
+                        </div>
                     </div>
-                </a>
-            </div>
-            {% empty %}
-                <p class="text-muted">No textbooks found.</p>
-            {% endfor %}
-        </div>
-
-
-        <!-- BORROWED BOOKS -->
-        <h4 class="fw-bold mt-5">Borrowed Textbooks</h4>
-        <div class="row g-4 mt-1">
-            {% for b in borrows %}
-            <div class="col-md-4 col-sm-6">
-                <div class="card p-3 shadow-sm h-100 card-hover">
-                    <h5 class="fw-bold">{{ b.textbook.title }}</h5>
-                    <p><strong>Status:</strong> {{ b.status }}</p>
-                    <p><strong>Borrowed:</strong> {{ b.start_date }}</p>
-                    {% if b.end_date %}
-                        <p><strong>Due:</strong> {{ b.end_date }}</p>
-                    {% else %}
-                        <p class="text-danger"><strong>Due:</strong> Not returned</p>
-                    {% endif %}
                 </div>
-            </div>
-            {% empty %}
-                <p class="text-muted">You have no borrowed books.</p>
-            {% endfor %}
-        </div>
+
+                <!-- Active Borrows -->
+                <div class="mt-4">
+                    <h4 class="fw-bold">Your Active Borrows</h4>
+                    <div class="row g-3 mt-2">
+                        {% if approved_borrows and approved_borrows.count > 0 %}
+                            {% for b in approved_borrows %}
+                                <div class="col-md-6">
+                                    <div class="card p-3 shadow-sm">
+                                        <h6 class="fw-bold mb-1">{{ b.textbook.title }}</h6>
+                                        <p class="small text-muted mb-1">{{ b.textbook.author }}</p>
+                                        <p class="mb-1"><strong>Borrowed:</strong> {{ b.start_date }}</p>
+                                        <p class="mb-0"><strong>Due:</strong> {% if b.end_date %}{{ b.end_date }}{% else %}<span class="text-danger">Not set</span>{% endif %}</p>
+                                    </div>
+                                </div>
+                            {% endfor %}
+                        {% else %}
+                            <div class="col-12">
+                                <p class="text-muted">You have no active borrowed textbooks.</p>
+                            </div>
+                        {% endif %}
+                    </div>
+                </div>
+
+
+        <!-- Borrow section removed as requested. New widgets above replace it. -->
 
     </div>
 

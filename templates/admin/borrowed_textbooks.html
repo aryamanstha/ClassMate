@@ -28,7 +28,7 @@
         </thead>
         <tbody>
           {% for borrow in borrows %}
-          <tr>
+            <tr>
             <td><strong>#{{ borrow.id }}</strong></td>
             <td>
               {{ borrow.student.name }}<br>
@@ -39,15 +39,40 @@
               <small class="text-muted">{{ borrow.textbook.textbook_id }}</small>
             </td>
             <td>
-              <span class="badge bg-{% if borrow.status == 'borrowed' %}warning{% elif borrow.status == 'returned' %}success{% else %}secondary{% endif %}">
-                {{ borrow.status }}
-              </span>
+              {% if borrow.status == 'requested' %}
+                <span class="badge bg-info">Requested</span>
+              {% elif borrow.status == 'active' %}
+                <span class="badge bg-warning">Active</span>
+              {% elif borrow.status == 'returned' %}
+                <span class="badge bg-success">Returned</span>
+              {% elif borrow.status == 'rejected' %}
+                <span class="badge bg-danger">Rejected</span>
+              {% elif borrow.status == 'overdue' %}
+                <span class="badge bg-danger">Overdue</span>
+              {% elif borrow.status == 'lost' %}
+                <span class="badge bg-dark">Lost</span>
+              {% else %}
+                <span class="badge bg-secondary">{{ borrow.status }}</span>
+              {% endif %}
             </td>
             <td>{{ borrow.start_date }}</td>
             <td>{{ borrow.end_date|default:"-" }}</td>
             <td>
               <a href="{% url 'admin_borrow_detail' borrow.id %}" class="btn btn-primary btn-sm">
                 <i class="bi bi-eye"></i> View
+              </a>
+              {% if borrow.status == 'requested' %}
+                <form method="post" action="{% url 'admin_approve_borrow' borrow.id %}" style="display:inline-block; margin-left:6px;">
+                  {% csrf_token %}
+                  <button type="submit" class="btn btn-success btn-sm"><i class="bi bi-check-lg"></i> Approve</button>
+                </form>
+                <form method="post" action="{% url 'admin_reject_borrow' borrow.id %}" style="display:inline-block; margin-left:6px;">
+                  {% csrf_token %}
+                  <button type="submit" class="btn btn-danger btn-sm"><i class="bi bi-x-lg"></i> Reject</button>
+                </form>
+              {% endif %}
+              <a href="{% url 'admin_delete_borrow' borrow.id %}" class="btn btn-danger btn-sm" style="margin-left:6px;">
+                <i class="bi bi-trash"></i> Delete
               </a>
             </td>
           </tr>

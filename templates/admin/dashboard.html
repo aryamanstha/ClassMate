@@ -36,58 +36,30 @@
   </div>
 </div>
 
-<!-- Pending Instructor Approvals -->
-<div class="detail-section">
-  <h4><i class="bi bi-check-circle"></i> Pending Instructor Approvals</h4>
-  
-  {% if pending_instructors %}
-    <div class="table-wrapper">
-      <table class="table table-hover">
-        <thead>
-          <tr>
-            <th>Instructor Name</th>
-            <th>Email</th>
-            <th>Department</th>
-            <th>Status</th>
-            <th>Actions</th>
-          </tr>
-        </thead>
-        <tbody>
-          {% for ia in pending_instructors %}
-          <tr>
-            <td>
-              <strong>{{ ia.instructor.name }}</strong><br>
-              <small class="text-muted">ID: {{ ia.instructor.instructor_id }}</small>
-            </td>
-            <td>{{ ia.instructor.email }}</td>
-            <td>{{ ia.instructor.department }}</td>
-            <td>
-              <span class="badge bg-warning text-dark">Pending</span>
-            </td>
-            <td>
-              <div class="action-buttons">
-                <a href="{% url 'admin_approve_instructor' ia.id %}" class="btn btn-success btn-sm">
-                  <i class="bi bi-check"></i> Approve
-                </a>
-                <a href="{% url 'admin_reject_instructor' ia.id %}" class="btn btn-danger btn-sm"
-                   onclick="return confirm('Are you sure you want to reject this instructor?');">
-                  <i class="bi bi-x"></i> Reject
-                </a>
-              </div>
-            </td>
-          </tr>
-          {% endfor %}
-        </tbody>
-      </table>
+<!-- New User Registrations Card -->
+<div class="detail-section mt-5">
+  <div class="row">
+    <div class="col-md-6">
+      <div class="card p-4 shadow-sm" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; border: none;">
+        <div class="d-flex justify-content-between align-items-start">
+          <div>
+            <h6 class="fw-bold mb-2"><i class="bi bi-person-plus"></i> New User Registrations</h6>
+            <h2 class="fw-bold mb-1">{{ new_users_this_week }}</h2>
+            <p class="small mb-0">This Week</p>
+          </div>
+          <div class="text-end">
+            <div class="small mb-1">
+              <span class="badge bg-light text-dark">Students: {{ new_students_this_week }}</span>
+            </div>
+            <div class="small">
+              <span class="badge bg-light text-dark">Instructors: {{ new_instructors_this_week }}</span>
+            </div>
+          </div>
+        </div>
+      </div>
     </div>
-    <p class="mt-3">
-      <a href="{% url 'admin_instructor_approvals' %}" class="btn btn-primary">
-        View All Approvals <i class="bi bi-arrow-right"></i>
-      </a>
-    </p>
-  {% else %}
-    <p class="text-muted">No pending instructor approvals.</p>
-  {% endif %}
+  </div>
 </div>
+
 
 {% endblock %}

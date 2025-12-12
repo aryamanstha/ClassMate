@@ -33,10 +33,12 @@
       <div class="col-md-6">
         <label class="form-label">Status</label>
         <select name="status" class="form-select">
-          <option value="borrowed" {% if borrow.status == 'borrowed' %}selected{% endif %}>Borrowed</option>
+          <option value="requested" {% if borrow.status == 'requested' %}selected{% endif %}>Requested</option>
+          <option value="active" {% if borrow.status == 'active' %}selected{% endif %}>Active</option>
           <option value="returned" {% if borrow.status == 'returned' %}selected{% endif %}>Returned</option>
           <option value="overdue" {% if borrow.status == 'overdue' %}selected{% endif %}>Overdue</option>
           <option value="lost" {% if borrow.status == 'lost' %}selected{% endif %}>Lost</option>
+          <option value="rejected" {% if borrow.status == 'rejected' %}selected{% endif %}>Rejected</option>
         </select>
       </div>
     </div>

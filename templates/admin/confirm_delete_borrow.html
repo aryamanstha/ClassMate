@@ -1,0 +1,79 @@
+{% extends 'base.html' %}
+
+{% block title %}Confirm Delete Borrow{% endblock %}
+
+{% block content %}
+<div class="container mt-5">
+  <div class="row justify-content-center">
+    <div class="col-md-8">
+      <div class="card border-danger">
+        <div class="card-header bg-danger text-white">
+          <h5 class="mb-0"><i class="bi bi-exclamation-triangle"></i> Confirm Deletion</h5>
+        </div>
+        <div class="card-body">
+          <p class="text-danger fw-bold mb-3">
+            You are about to permanently delete this borrow record. This action cannot be undone.
+          </p>
+
+          <div class="alert alert-warning" role="alert">
+            <strong>Borrow Details:</strong>
+            <dl class="row mt-2">
+              <dt class="col-sm-3">Borrow ID:</dt>
+              <dd class="col-sm-9">#{{ borrow.id }}</dd>
+
+              <dt class="col-sm-3">Student:</dt>
+              <dd class="col-sm-9">
+                {{ borrow.student.name }}<br>
+                <small class="text-muted">{{ borrow.student.student_id }}</small>
+              </dd>
+
+              <dt class="col-sm-3">Textbook:</dt>
+              <dd class="col-sm-9">
+                {{ borrow.textbook.title }}<br>
+                <small class="text-muted">{{ borrow.textbook.textbook_id }}</small>
+              </dd>
+
+              <dt class="col-sm-3">Status:</dt>
+              <dd class="col-sm-9">
+                {% if borrow.status == 'requested' %}
+                  <span class="badge bg-info">Requested</span>
+                {% elif borrow.status == 'active' %}
+                  <span class="badge bg-warning">Active</span>
+                {% elif borrow.status == 'returned' %}
+                  <span class="badge bg-success">Returned</span>
+                {% elif borrow.status == 'rejected' %}
+                  <span class="badge bg-danger">Rejected</span>
+                {% elif borrow.status == 'overdue' %}
+                  <span class="badge bg-danger">Overdue</span>
+                {% elif borrow.status == 'lost' %}
+                  <span class="badge bg-dark">Lost</span>
+                {% else %}
+                  <span class="badge bg-secondary">{{ borrow.status }}</span>
+                {% endif %}
+              </dd>
+
+              <dt class="col-sm-3">Start Date:</dt>
+              <dd class="col-sm-9">{{ borrow.start_date }}</dd>
+
+              <dt class="col-sm-3">End Date:</dt>
+              <dd class="col-sm-9">{{ borrow.end_date|default:"-" }}</dd>
+            </dl>
+          </div>
+
+          <div class="mt-4">
+            <form method="post" style="display:inline-block; margin-right:10px;">
+              {% csrf_token %}
+              <button type="submit" class="btn btn-danger btn-lg">
+                <i class="bi bi-trash"></i> Delete Permanently
+              </button>
+            </form>
+            <a href="{% url 'admin_borrowed_textbooks' %}" class="btn btn-secondary btn-lg">
+              <i class="bi bi-x-circle"></i> Cancel
+            </a>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

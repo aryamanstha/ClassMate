@@ -1,0 +1,77 @@
+{% extends 'base.html' %}
+
+{% block title %}Confirm Delete User Account{% endblock %}
+
+{% block content %}
+<div class="container mt-5">
+  <div class="row justify-content-center">
+    <div class="col-md-8">
+      <div class="card border-danger">
+        <div class="card-header bg-danger text-white">
+          <h5 class="mb-0"><i class="bi bi-exclamation-triangle"></i> Confirm Deletion</h5>
+        </div>
+        <div class="card-body">
+          <p class="text-danger fw-bold mb-3">
+            You are about to permanently delete this user account. This action cannot be undone.
+          </p>
+
+          <div class="alert alert-warning" role="alert">
+            <strong>User Account Details:</strong>
+            <dl class="row mt-2">
+              <dt class="col-sm-3">Username:</dt>
+              <dd class="col-sm-9">{{ user.username }}</dd>
+
+              <dt class="col-sm-3">Email:</dt>
+              <dd class="col-sm-9">{{ user.email|default:"-" }}</dd>
+
+              <dt class="col-sm-3">Full Name:</dt>
+              <dd class="col-sm-9">{{ user.get_full_name|default:"-" }}</dd>
+
+              <dt class="col-sm-3">Account Type:</dt>
+              <dd class="col-sm-9">
+                {% if user.studentaccount %}
+                  <span class="badge bg-success">Student</span>
+                {% elif user.instructoraccount %}
+                  <span class="badge bg-info">Instructor</span>
+                {% else %}
+                  <span class="badge bg-secondary">Admin</span>
+                {% endif %}
+              </dd>
+
+              <dt class="col-sm-3">Status:</dt>
+              <dd class="col-sm-9">
+                {% if user.is_active %}
+                  <span class="badge bg-success">Active</span>
+                {% else %}
+                  <span class="badge bg-danger">Inactive</span>
+                {% endif %}
+              </dd>
+
+              <dt class="col-sm-3">Admin Access:</dt>
+              <dd class="col-sm-9">
+                {% if user.is_staff %}
+                  <span class="badge bg-danger">Admin</span>
+                {% else %}
+                  <span class="badge bg-secondary">User</span>
+                {% endif %}
+              </dd>
+            </dl>
+          </div>
+
+          <div class="mt-4">
+            <form method="post" style="display:inline-block; margin-right:10px;">
+              {% csrf_token %}
+              <button type="submit" class="btn btn-danger btn-lg">
+                <i class="bi bi-trash"></i> Delete Permanently
+              </button>
+            </form>
+            <a href="{% url 'admin_user_accounts' %}" class="btn btn-secondary btn-lg">
+              <i class="bi bi-x-circle"></i> Cancel
+            </a>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

@@ -75,9 +75,14 @@
               {% endif %}
             </td>
             <td>
-              <a href="{% url 'admin_user_detail' user.id %}" class="btn btn-primary btn-sm">
-                <i class="bi bi-eye"></i> View
-              </a>
+              <div class="btn-group" role="group">
+                <a href="{% url 'admin_user_detail' user.id %}" class="btn btn-primary btn-sm">
+                  <i class="bi bi-eye"></i> View
+                </a>
+                <a href="{% url 'admin_delete_user' user.id %}" class="btn btn-danger btn-sm">
+                  <i class="bi bi-trash"></i> Delete
+                </a>
+              </div>
             </td>
           </tr>
           {% endfor %}

@@ -53,6 +53,13 @@
           transform: translateY(-10px);
         }
       }
+            /* Ensure modals appear above toasts/chat widgets which use very high z-indexes */
+            .modal-backdrop {
+                z-index: 100000 !important;
+            }
+            .modal {
+                z-index: 100001 !important;
+            }
     </style>
 
     {% block head_extra %}{% endblock %}
@@ -132,6 +139,13 @@
                 <a class="nav-link navbar-student-link" href="{% url 'student_textbooks' %}">
                     <div class="student-nav-icon"><i class="bi bi-journal-bookmark-fill fs-4"></i></div>
                     <span class="student-nav-text">My Textbooks</span>
+                </a>
+            </li>
+
+            <li class="nav-item navbar-student-item">
+                <a class="nav-link navbar-student-link" href="{% url 'student_request_borrow' %}">
+                    <div class="student-nav-icon"><i class="bi bi-book fs-4"></i></div>
+                    <span class="student-nav-text">Borrow Book</span>
                 </a>
             </li>
 
@@ -486,6 +500,18 @@ document.addEventListener("DOMContentLoaded", () => {
 
 
 {% block body_extra %}{% endblock %}
+<script>
+// Move modal elements to document.body so they're not blocked by other page overlays
+document.addEventListener('DOMContentLoaded', function () {
+    try {
+        document.querySelectorAll('.modal').forEach(function(modal) {
+            if (modal.parentNode !== document.body) document.body.appendChild(modal);
+        });
+    } catch (e) {
+        console.warn('Could not move modals to body', e);
+    }
+});
+</script>
 </body>
 </html>
 

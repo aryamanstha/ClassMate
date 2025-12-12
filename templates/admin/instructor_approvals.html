@@ -29,15 +29,15 @@
           {% for ia in pending_instructors %}
           <tr>
             <td>
-              <strong>{{ ia.instructor.name }}</strong><br>
-              <small class="text-muted">ID: {{ ia.instructor.instructor_id }}</small>
+              <strong>{{ ia.user.get_full_name }}</strong><br>
+              <small class="text-muted">Username: {{ ia.user.username }}</small>
             </td>
-            <td>{{ ia.instructor.email }}</td>
-            <td>{{ ia.instructor.phone }}</td>
-            <td>{{ ia.instructor.department }}</td>
+            <td>{{ ia.user.email }}</td>
+            <td>{{ ia.pending_phone }}</td>
+            <td>{{ ia.pending_department }}</td>
             <td>
-              {% if ia.instructor.city %}
-                {{ ia.instructor.city }}, {{ ia.instructor.state }} {{ ia.instructor.zip_code }}
+              {% if ia.pending_city %}
+                {{ ia.pending_city }}, {{ ia.pending_state }} {{ ia.pending_zip_code }}
               {% else %}
                 <span class="text-muted">-</span>
               {% endif %}

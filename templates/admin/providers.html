@@ -70,6 +70,9 @@
               <a href="{% url 'admin_provider_detail' provider.provider_id %}" class="btn btn-primary btn-sm">
                 <i class="bi bi-eye"></i> View
               </a>
+              <a href="{% url 'admin_delete_provider' provider.provider_id %}" class="btn btn-danger btn-sm" style="margin-left:6px;">
+                <i class="bi bi-trash"></i> Delete
+              </a>
             </td>
           </tr>
           {% endfor %}
